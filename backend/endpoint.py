@@ -88,7 +88,7 @@ class EndpointFavicon(Endpoint):
         self, method: str, path_parameter: str | None,
         get_parameters: dict[str, str], json_content: dict
     ):
-        return "{}", self.CONTENT_JSON, self.NOT_FOUND_404
+        return "{}", self.CONTENT_JSON, self.NOT_FOUND_404  # TODO
 
 
 class EndpointStatic(Endpoint):

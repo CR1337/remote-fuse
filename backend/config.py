@@ -9,6 +9,8 @@ class Config:
 
     TIME_RESOLUTION: float = 0.1
     IGNITION_DURATION: float = 0.1
+    EVENT_STREAM_PERIOD: float = 2.0
+    EVENT_STREAM_RETRY_PERIOD: float = 5.0
 
     _device_id: str
     _fuse_amount: int
@@ -32,6 +34,14 @@ class Config:
     @property
     def ignition_duration(self) -> float:
         return self.IGNITION_DURATION
+
+    @property
+    def event_stream_period(self) -> float:
+        return self.EVENT_STREAM_PERIOD
+
+    @property
+    def event_stream_retry_period(self) -> float:
+        return self.EVENT_STREAM_RETRY_PERIOD
 
 
 config = Config()

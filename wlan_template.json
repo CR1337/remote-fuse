@@ -1,0 +1,5 @@
+{
+    "comment": "Fill in your ssid and password and rename this file to 'wlan.json'.",
+    "ssid": "your_ssid",
+    "password": "your_password"
+}

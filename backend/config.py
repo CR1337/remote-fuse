@@ -14,10 +14,14 @@ class Config:
 
     _device_id: str
     _fuse_amount: int
+    _master_ip: str
+    _master_port: int
 
     def __init__(self):
         self._device_id = f"remote{hardware.remote_device_index}"
         self._fuse_amount = hardware.fuse_amount
+        self._master_ip = None
+        self._master_port = None
 
     @property
     def device_id(self) -> str:
@@ -42,6 +46,22 @@ class Config:
     @property
     def event_stream_retry_period(self) -> float:
         return self.EVENT_STREAM_RETRY_PERIOD
+
+    @property
+    def master_ip(self) -> str:
+        return self._master_ip
+
+    @master_ip.setter
+    def master_ip(self, value: str):
+        self._master_ip = value
+
+    @property
+    def master_port(self) -> int:
+        return self._master_port
+
+    @master_port.setter
+    def master_port(self, value: int):
+        self._master_port = value
 
 
 config = Config()

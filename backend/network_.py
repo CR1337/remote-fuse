@@ -9,6 +9,7 @@ class Network:
     CONNECTION_WAIT_TIME: float = 2.0  # seconds
 
     _wlan: network.WLAN = network.WLAN(network.STA_IF)
+    _ip: str = ""
 
     @classmethod
     def connect_wlan(cls):
@@ -23,6 +24,7 @@ class Network:
 
         if cls._wlan.status() == network.STAT_GOT_IP:
             print("connected to wlan")
+            cls._ip = cls._wlan.ifconfig()[0]
             return
 
         if cls._wlan.status() == network.STAT_WRONG_PASSWORD:
@@ -38,3 +40,7 @@ class Network:
     def disconnect_wlan(cls):
         cls._wlan.disconnect()
         cls._wlan.active(False)
+
+    @classmethod
+    def ip(cls) -> str:
+        return cls._ip

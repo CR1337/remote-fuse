@@ -1,4 +1,4 @@
-from machine import Pin, WDT, deepsleep
+from machine import Pin, WDT, deepsleep, Timer
 
 
 class Hardware:
@@ -72,8 +72,10 @@ class Hardware:
 
     def _secure(self):
         from backend.led import led
+        from backend.event_stream import EventStream
         led.off()
         self.leds_off()
+        EventStream.close_all()
         for fuse_index in range(self.fuse_amount):
             self.fuse_off(fuse_index)
 
@@ -83,15 +85,29 @@ class Hardware:
         led.on()
         raise RuntimeError(f"panic: {message}")
 
-    def shutdown(self):
+    def _shutdown(self):
         self._secure()
         deepsleep()
 
-    def reboot(self):
+    def shutdown(self):
+        Timer().init(
+            period=3000,
+            mode=Timer.ONE_SHOT,
+            callback=lambda _: self._shutdown()
+        )
+
+    def _reboot(self):
         self._secure()
         WDT(id=1, timeout=1000)
         while True:
             pass
+
+    def reboot(self):
+        Timer().init(
+            period=3000,
+            mode=Timer.ONE_SHOT,
+            callback=lambda _: self._reboot()
+        )
 
 
 hardware = Hardware()

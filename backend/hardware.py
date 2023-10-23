@@ -63,6 +63,10 @@ class Hardware:
         self._fuses_locked = False
 
     @property
+    def fuses_locked(self) -> bool:
+        return self._fuses_locked
+
+    @property
     def remote_device_index(self) -> int:
         return self._remote_device_index
 

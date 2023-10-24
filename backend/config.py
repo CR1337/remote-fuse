@@ -20,7 +20,9 @@ class Config:
 
     def __init__(self):
         self._device_id = f"remote{hardware.remote_device_index}"
+        logger.info(f"Detected device id: {self._device_id}")
         self._fuse_amount = hardware.fuse_amount
+        logger.info(f"Detected fuse amount: {self._fuse_amount}")
         self._master_ip = None
         self._master_port = None
 

@@ -3,6 +3,7 @@ from machine import Timer
 import json
 from backend.config import config
 from backend.logger import logger
+from backend.controller import controller
 
 
 event_streams: list['EventStream'] = []
@@ -52,8 +53,8 @@ class EventStream:
                 self._set_timer()
 
     def _event_content(self) -> str:
-        data = {}  # TODO
+        data = controller.get_state()
         content = f"retry: {config.event_stream_retry_period * 1000}\n"
-        content += f"id: {self._counter}\n"
-        content += f"data: {json.dumps(data)}\n\n"
+        content += f"data: {json.dumps(data)}\n"
+        content += f"id: {self._counter}\n\n"
         return content

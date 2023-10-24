@@ -1,7 +1,8 @@
 import socket
 from machine import Timer
 import json
-from config import config
+from backend.config import config
+from backend.logger import logger
 
 
 event_streams: list['EventStream'] = []
@@ -26,6 +27,7 @@ class EventStream:
     def run(self):
         event_streams.append(self)
         self._set_timer()
+        logger.debug("Started event stream", __file__)
 
     def close(self):
         self._closed = True

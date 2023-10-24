@@ -4,6 +4,7 @@ from backend.address import Address
 from backend.command import Command
 from backend.config import config
 from backend.schedule import Schedule
+from backend.logger import logger
 
 
 class Controller:
@@ -23,57 +24,77 @@ class Controller:
         self._schedule = None
 
     def load_program(self, name: str, json_data: list):
+        logger.info(f"Load program {name}", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
             raise RuntimeError()
         self._program = Program.from_json(name, json_data)
+        logger.debug(f"Program {name} loaded", __file__)
 
     def unload_program(self):
+        logger.info("Unload program", __file__)
         if self._program_state not in (self.STATE_LOADED,):
             raise RuntimeError()
         self._program = None
+        logger.debug("Program unloaded", __file__)
 
     def schedule_program(self, time: str):
+        logger.info(f"Schedule program for {time}", __file__)
         if self._program_state not in (self.STATE_LOADED,):
             raise RuntimeError()
         self._schedule = Schedule(time, self.run_program)
         self._schedule.start()
+        logger.debug(f"Program scheduled for {time}", __file__)
 
     def unschedule_program(self):
+        logger.info("Unschedule program", __file__)
         if self._program_state not in (self.STATE_SCHEDULED,):
             raise RuntimeError()
         self._schedule.cancel()
         self._schedule = None
+        logger.debug("Program unscheduled", __file__)
 
     def run_program(self):
+        logger.info("Run program", __file__)
         if self._program_state not in (self.STATE_LOADED,):
             raise RuntimeError()
         self._program.run(self._program_finished_callback)
+        logger.debug("Program running", __file__)
 
     def pause_program(self):
+        logger.info("Pause program", __file__)
         if self._program_state not in (self.STATE_RUNNING,):
             raise RuntimeError()
         self._program.pause()
+        logger.debug("Program paused", __file__)
 
     def continue_program(self):
+        logger.info("Continue program", __file__)
         if self._program_state not in (self.STATE_PAUSED,):
             raise RuntimeError()
         self._program.continue_()
+        logger.debug("Program continued", __file__)
 
     def stop_program(self):
+        logger.info("Stop program", __file__)
         if self._program_state not in (self.STATE_RUNNING, self.STATE_PAUSED):
             raise RuntimeError()
         self._program.stop()
+        logger.debug("Program stopped", __file__)
 
     def run_testloop(self):
+        logger.info("Run testloop", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
             raise RuntimeError()
         self._program = Program.testloop_program()
         self._program.run(self._program_finished_callback)
 
     def _program_finished_callback(self):
-        ...
+        self._program_state = self.STATE_LOADED
+        self.unload_program()
+        logger.info("Program finished", __file__)
 
     def fire(self, letter: str, number: int):
+        logger.info(f"Fire {letter}{number}", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
             raise RuntimeError()
         address = Address(config.device_id, letter, number)
@@ -84,7 +105,7 @@ class Controller:
         return tu.get_system_time()
 
     def get_state(self) -> dict:
-        ...
+        ...  # TODO
 
 
 controller = Controller()

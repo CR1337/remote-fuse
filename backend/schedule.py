@@ -1,5 +1,6 @@
 from backend import time_util as tu
 from backend.config import config
+from backend.logger import logger
 from machine import Timer
 
 
@@ -35,14 +36,20 @@ class Schedule:
 
     def join(self):
         while not self._done:
-            pass
+            tu.sleep(config.time_reolution)
 
     def _timer_callback(self, timer: Timer):
         if not self._cancel_flag:
             if tu.time_reached(self._timestamp):
                 try:
+                    logger.debug("Calling schedule callback", __file__)
                     self._callback()
-                except Exception:
+                except Exception as ex:
+                    logger.exception(
+                        "Exception while calling schedule callback",
+                        ex,
+                        __file__
+                    )
                     self._faulty = True
                 self._cancel_flag = True
         else:

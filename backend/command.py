@@ -3,6 +3,7 @@ from backend.address import Address
 from backend.hardware import hardware
 from machine import Timer
 from backend import time_util as tu
+from backend.logger import logger
 
 
 class Command:
@@ -27,6 +28,7 @@ class Command:
         timer.deinit()
 
     def light(self):
+        logger.debug(f"Light {self}", __file__)
         hardware.fuse_on(self._address.fuse_index)
         self._fireing = True
         Timer().init(

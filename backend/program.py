@@ -4,6 +4,7 @@ from backend.config import config
 from backend.hardware import hardware
 from backend.command import Command
 from backend.rl_exception import RLException
+from backend.logger import logger
 import _thread
 
 
@@ -159,9 +160,12 @@ class Program:
             command = self._command_list[self._command_idx]
             if command.timestamp <= self._current_timestamp:
                 try:
+                    logger.debug(f"Light {command}", __file__)
                     command.light()
-                except Exception:
-                    ...  # TODO
+                except Exception as ex:
+                    logger.exception(
+                        "Exception while fireing {command}", ex, __file__
+                    )
                 self._command_idx += 1
                 if self._command_idx >= len(self._command_list):
                     break

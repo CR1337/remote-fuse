@@ -1,4 +1,5 @@
 from machine import Pin, WDT, deepsleep, Timer
+from backend.logger import logger
 
 
 class Hardware:
@@ -50,20 +51,25 @@ class Hardware:
             pin.value(0)
 
     def fuse_on(self, index: int):
+        logger.debug(f"Fuse {index} on", __file__)
         if not self._fuses_locked:
             self._fuse_pins[index].value(1)
 
     def fuse_off(self, index: int):
+        logger.debug(f"Fuse {index} off", __file__)
         self._fuse_pins[index].value(0)
 
     def lock_fuses(self):
+        logger.debug("Lock Hardware", __file__)
         self._fuses_locked = True
 
     def unlock_fuses(self):
+        logger.debug("Unlock Hardware", __file__)
         self._fuses_locked = False
 
     @property
     def fuses_locked(self) -> bool:
+        logger.debug("Check Lock Status", __file__)
         return self._fuses_locked
 
     @property
@@ -84,12 +90,14 @@ class Hardware:
             self.fuse_off(fuse_index)
 
     def panic(self, message: str):
+        logger.error(f"Panic: {message}", __file__)
         from backend.led import led
         self._secure()
         led.on()
         raise RuntimeError(f"panic: {message}")
 
     def _shutdown(self):
+        logger.info("Shutdown", __file__)
         self._secure()
         deepsleep()
 
@@ -101,6 +109,7 @@ class Hardware:
         )
 
     def _reboot(self):
+        logger.info("Reboot", __file__)
         self._secure()
         WDT(id=1, timeout=1000)
         while True:
@@ -112,6 +121,11 @@ class Hardware:
             mode=Timer.ONE_SHOT,
             callback=lambda _: self._reboot()
         )
+
+    def get_state(self) -> dict:
+        return {
+            "is_locked": self.fuses_locked
+        }
 
 
 hardware = Hardware()

@@ -176,17 +176,31 @@ def endpoint_state(request: Request) -> Response:
 
 @router.route("/logs", ['GET'])
 def endpoint_logs(request: Request) -> Response:
-    ...
+    return Response(body=json.dumps(logger.get_log_files()))
 
 
 @router.route("/logs/<filename>", ['GET'])
 def endpoint_logs_filename(request: Request) -> Response:
-    ...
+    filename = request.path_parameter
+    if logger.logfile_exists(filename):
+        with open(logger.get_logfile_path(filename), 'r') as file:
+            content = file.read()
+        return Response(
+            body=content,
+            content_type=Response.CONTENT_TYPE_PLAIN
+        )
+    else:
+        return Response(status_code=404)
 
 
 @router.route("/logs/structured/<filename>", ['GET'])
 def endpoint_logs_structured_filename(request: Request) -> Response:
-    ...
+    filename = request.path_parameter
+    if logger.logfile_exists(filename):
+        structured_log = logger.get_log_structured_content(filename)
+        return Response(body=json.dumps(structured_log))
+    else:
+        return Response(status_code=404)
 
 
 @router.route("/config", ['GET', 'POST'])

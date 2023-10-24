@@ -1,5 +1,6 @@
 from machine import Pin, Timer
-from hardware import hardware
+from backend.hardware import hardware
+from backend.logger import logger
 
 
 class Led:
@@ -62,18 +63,22 @@ class Led:
         self._schedule_timer(periods[0 if self._is_on else 1])
 
     def on(self):
+        logger.info("LED on", __file__)
         self._mode = 'on'
         self._mode_change_flag = True
 
     def off(self):
+        logger.info("LED off", __file__)
         self._mode = 'off'
         self._mode_change_flag = True
 
     def blink_short(self):
+        logger.info("LED blink short", __file__)
         self._mode = 'blink_short'
         self._mode_change_flag = True
 
     def blink_long(self):
+        logger.info("LED blink long", __file__)
         self._mode = 'blink_long'
         self._mode_change_flag = True
 

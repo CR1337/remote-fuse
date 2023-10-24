@@ -20,32 +20,60 @@ class Logger:
     def __init__(self):
         self._filename = f"logs/remote-{str(tu.get_system_time())}.log"
 
-    def _log(self, level: str, message: str):
+    def _log(self, level: str, message: str, filename: str):
         time_string = tu.get_system_time.split(".")[0]
         time_string = time_string.replace("T", " ").replace(":", ".")
+        if filename is None:
+            filename = "NO_FILENAME"
         log_entry = (
             f"{self.START}{time_string}{self.SEP}{level}"
             f"{self.SEP}main_thread"
-            f"{self.SEP}NO_FILENAME{self.SEP}NO_LINE{self.SEP}{message}"  # TODO
+            f"{self.SEP}{filename}{self.SEP}NO_LINE{self.SEP}{message}"
         )
         print(log_entry)
         with open(self._filename, 'a', encoding='utf-8') as file:
             file.write(f"{log_entry}\n")
 
-    def debug(self, message: str):
-        self._log('debug', message)
+    def debug(
+        self,
+        message: str,
+        filename: str = None
+    ):
+        self._log('debug', message, filename)
 
-    def info(self, message: str):
-        self._log('info', message)
+    def info(
+        self,
+        message: str,
+        filename: str = None
+    ):
+        self._log('info', message, filename)
 
-    def warning(self, message: str):
-        self._log('warning', message)
+    def warning(
+        self,
+        message: str,
+        filename: str = None
+    ):
+        self._log('warning', message, filename)
 
-    def error(self, message: str):
-        self._log('error', message)
+    def error(
+        self,
+        message: str,
+        filename: str = None
+    ):
+        self._log('error', message, filename)
 
-    def exception(self, message: str):
-        self._log('exception', message)  # TODO
+    def exception(
+        self,
+        message: str,
+        exception: Exception,
+        filename: str = None
+    ):
+        traceback = self.get_traceback(exception)
+        self._log(
+            'exception',
+            "\n".join([message, traceback]),
+            filename
+        )
 
     def get_log_files() -> list[str]:
         return [

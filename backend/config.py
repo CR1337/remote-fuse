@@ -1,4 +1,5 @@
 from hardware import hardware
+from backend.logger import logger
 
 
 class Config:
@@ -53,6 +54,7 @@ class Config:
 
     @master_ip.setter
     def master_ip(self, value: str):
+        logger.info(f"Set master ip to {value}")
         self._master_ip = value
 
     @property
@@ -61,6 +63,7 @@ class Config:
 
     @master_port.setter
     def master_port(self, value: int):
+        logger.info(f"Set master port to {value}")
         self._master_port = value
 
 

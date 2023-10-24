@@ -5,6 +5,7 @@ from backend.command import Command
 from backend.config import config
 from backend.schedule import Schedule
 from backend.logger import logger
+from backend.hardware import hardware
 
 
 class Controller:
@@ -105,7 +106,23 @@ class Controller:
         return tu.get_system_time()
 
     def get_state(self) -> dict:
-        ...  # TODO
+        return {
+            'controller': {
+                'state': self._program_state,
+                'system_time': tu.get_system_time(),
+            },
+            'hardware': hardware.get_state(),
+            'config': config.get_state(),
+            'schedule': (
+                None if self._schedule is None
+                else self._schedule.get_state()
+            ),
+            'program': (
+                None if self._program is None
+                else self._program.get_state()
+            ),
+            'update_needed': None
+        }
 
 
 controller = Controller()

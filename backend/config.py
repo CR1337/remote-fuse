@@ -68,5 +68,17 @@ class Config:
         logger.info(f"Set master port to {value}")
         self._master_port = value
 
+    def get_state(self) -> dict:
+        return {
+            "device_id": self.device_id,
+            "fuse_amount": self.fuse_amount,
+            "time_resolution": self.time_reolution,
+            "ignition_duration": self.ignition_duration,
+            "event_stream_period": self.event_stream_period,
+            "event_stream_retry_period": self.event_stream_retry_period,
+            "master_ip": self.master_ip,
+            "master_port": self.master_port
+        }
+
 
 config = Config()

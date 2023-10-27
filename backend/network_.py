@@ -8,33 +8,41 @@ class Network:
 
     CONNECTION_WAIT_TIME: float = 2.0  # seconds
 
-    _wlan: network.WLAN = network.WLAN(network.STA_IF)
+    _wlan: network.WLAN
     _ip: str = ""
 
     @classmethod
     def connect_wlan(cls):
+        cls._wlan = network.WLAN(network.STA_IF)
         cls._wlan.active(True)
-        with open('wlan.txt') as file:
+        with open('wlan.json') as file:
             credentials = json.load(file)
-        cls._wlan.connect(credentials['ssid'], credentials['password'])
+        cls._wlan.connect(
+            ssid=credentials['ssid'],
+            key=credentials['password']
+        )
 
         while cls._wlan.status() == network.STAT_CONNECTING:
             print("waiting for connection...")
             tu.sleep(cls.CONNECTION_WAIT_TIME)
 
-        if cls._wlan.status() == network.STAT_GOT_IP:
+        if cls._wlan.isconnected():
             print("connected to wlan")
             cls._ip = cls._wlan.ifconfig()[0]
             return
 
-        if cls._wlan.status() == network.STAT_WRONG_PASSWORD:
+        if cls._wlan.status() == 2:  # all is fine
+            return
+        elif cls._wlan.status() == network.STAT_WRONG_PASSWORD:
             hardware.panic("wrong wlan password")
         elif cls._wlan.status() == network.STAT_NO_AP_FOUND:
             hardware.panic("no wlan access point found")
         elif cls._wlan.status() == network.STAT_CONNECT_FAIL:
             hardware.panic("wlan connection failed")
+        elif cls._wlan.status() == network.STAT_IDLE:
+            hardware.panic("wlan connection idle")
         else:
-            hardware.panic("unknown wlan error")
+            hardware.panic(f"unknown wlan error: {cls._wlan.status()}")
 
     @classmethod
     def disconnect_wlan(cls):

@@ -7,20 +7,24 @@ from backend.logger import logger
 
 
 def entrypoint():
-    logger.info("Running app...", __file__)
+    logger.info("Running app...", "main.py")
     led.blink_long()
     Network.connect_wlan()
     tu.set_ntp_time()
     webserver.run()
 
 
-try:
-    entrypoint()
-except Exception as ex:
-    logger.exception("Exception running app!", ex, __file__)
-except (KeyboardInterrupt, SystemExit):
-    logger.info(
-        "Termination due to KeyboardInterrupt or SystemExit.", __file__
-    )
-finally:
-    hardware.shutdown()
+entrypoint()
+
+
+# try:
+#     entrypoint()
+# except Exception as ex:
+#     logger.exception("Exception running app!", ex, "main.py")
+# except (KeyboardInterrupt, SystemExit):
+#     logger.info(
+#         "Termination due to KeyboardInterrupt or SystemExit.", "main.py"
+#     )
+# finally:
+#     pass
+#     # hardware.shutdown()

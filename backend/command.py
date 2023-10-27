@@ -40,6 +40,15 @@ class Command:
     def increae_timestamp(self, offset: float):
         self._timestamp += offset
 
+    def get_state(self) -> dict:
+        return {
+            'address': str(self._address),
+            'timestamp': self._timestamp,
+            'name': self._name,
+            'fired': self._fired,
+            'fireing': self._fireing,
+        }
+
     @property
     def address(self) -> Address:
         return self._address

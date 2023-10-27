@@ -18,21 +18,29 @@ class Logger:
             return file.read()
 
     def __init__(self):
+        try:
+            os.stat("/logs")
+        except OSError:
+            os.mkdir("/logs")
         self._filename = f"logs/remote-{str(tu.get_system_time())}.log"
 
     def _log(self, level: str, message: str, filename: str):
-        time_string = tu.get_system_time.split(".")[0]
+        time_string = tu.get_system_time().split(".")[0]
         time_string = time_string.replace("T", " ").replace(":", ".")
         if filename is None:
             filename = "NO_FILENAME"
         log_entry = (
             f"{self.START}{time_string}{self.SEP}{level}"
-            f"{self.SEP}main_thread"
-            f"{self.SEP}{filename}{self.SEP}NO_LINE{self.SEP}{message}"
+            + f"{self.SEP}main_thread"
+            + f"{self.SEP}{filename}{self.SEP}NO_LINE{self.SEP}{message}"
         )
         print(log_entry)
-        with open(self._filename, 'a', encoding='utf-8') as file:
-            file.write(f"{log_entry}\n")
+        try:
+            with open(self._filename, 'a', encoding='utf-8') as file:
+                file.write(f"{log_entry}\n")
+        except OSError:
+            with open(self._filename, 'w', encoding='utf-8') as file:
+                file.write(f"{log_entry}\n")
 
     def debug(
         self,
@@ -75,14 +83,14 @@ class Logger:
             filename
         )
 
-    def get_log_files() -> list[str]:
+    def get_log_files(self) -> list[str]:
         return [
             filename for filename
             in os.listdir("logs")
             if filename.endswith(".log")
         ]
 
-    def get_log_file_content(name: str) -> str:
+    def get_log_file_content(self, name: str) -> str:
         with open(f"logs/{name}", 'r', encoding='utf-8') as file:
             return file.read()
 
@@ -101,7 +109,7 @@ class Logger:
             })
         return structured_content
 
-    def logfile_exists(name: str) -> bool:
+    def logfile_exists(self, name: str) -> bool:
         try:
             with open(f"logs/{name}", 'r') as _:
                 return True

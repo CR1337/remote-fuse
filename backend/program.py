@@ -3,14 +3,14 @@ from backend.address import Address
 from backend.config import config
 from backend.hardware import hardware
 from backend.command import Command
-from backend.rl_exception import RLException
+from backend.rl_exception import RlException
 from backend.logger import logger
 import _thread
 
 
 class Program:
 
-    class InvalidProgram(RLException):
+    class InvalidProgram(RlException):
         pass
 
     _name: str
@@ -95,7 +95,7 @@ class Program:
 
     def join(self):
         while self._running:
-            tu.sleep(config.time_reolution)
+            tu.sleep(config.time_resolution)
 
     @property
     def is_running(self) -> bool:
@@ -155,7 +155,7 @@ class Program:
                 if self._stop_flag:
                     break
 
-            tu.sleep(config.time_reolution)
+            tu.sleep(config.time_resolution)
 
             command = self._command_list[self._command_idx]
             if command.timestamp <= self._current_timestamp:
@@ -178,7 +178,7 @@ class Program:
             if self._stop_flag:
                 pause_ended_timestamp = tu.current_timestamp()
                 return pause_ended_timestamp - pause_started_timestamp
-            tu.sleep(config.time_reolution)
+            tu.sleep(config.time_resolution)
         self._pause_flag = False
         self._continue_flag = False
         pause_ended_timestamp = tu.current_timestamp()

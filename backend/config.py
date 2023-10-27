@@ -1,4 +1,4 @@
-from hardware import hardware
+from backend.hardware import hardware
 from backend.logger import logger
 
 
@@ -35,7 +35,7 @@ class Config:
         return self._fuse_amount
 
     @property
-    def time_reolution(self) -> float:
+    def time_resolution(self) -> float:
         return self.TIME_RESOLUTION
 
     @property
@@ -72,7 +72,7 @@ class Config:
         return {
             "device_id": self.device_id,
             "fuse_amount": self.fuse_amount,
-            "time_resolution": self.time_reolution,
+            "time_resolution": self.time_resolution,
             "ignition_duration": self.ignition_duration,
             "event_stream_period": self.event_stream_period,
             "event_stream_retry_period": self.event_stream_retry_period,

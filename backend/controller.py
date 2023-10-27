@@ -1,4 +1,4 @@
-import time_util as tu
+import backend.time_util as tu
 from backend.program import Program
 from backend.address import Address
 from backend.command import Command
@@ -22,6 +22,7 @@ class Controller:
 
     def __init__(self):
         self._program = None
+        self._program_state = self.STATE_NOT_LOADED
         self._schedule = None
 
     def load_program(self, name: str, json_data: list):

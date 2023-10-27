@@ -3,7 +3,7 @@ import socket
 from backend.request import Request
 from backend.endpoints import router
 from backend.network_ import Network
-from hardware import hardware
+from backend.hardware import hardware
 from backend.led import led
 
 
@@ -36,13 +36,13 @@ class Webserver:
         self._connection = socket.socket()
         self._connection.bind(host)
         self._connection.listen()
-        print(f"Listening on {Network.ip}:{self.PORT}")
+        print(f"Listening on {Network.ip()}:{self.PORT}")
 
     def _mainloop(self):
         self._current_client, (client_address, client_port) = (
             self._connection.accept()
         )
-        raw_request = str(self._current_client.recv(1024))
+        raw_request = self._current_client.recv(1024).decode('ascii')
         request = Request(
             raw_request,
             self._current_client,

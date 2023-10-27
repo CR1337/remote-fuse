@@ -35,7 +35,7 @@ class Address:
         if self._number < 0 or self._number >= self.NUMBERS_PER_LETTER:
             raise ValueError(
                 f"number has to be a positive integer in "
-                f"[0,{self.NUMBERS_PER_LETTER - 1}]: {self._number}"
+                + f"[0,{self.NUMBERS_PER_LETTER - 1}]: {self._number}"
             )
 
     @property

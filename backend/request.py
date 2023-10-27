@@ -30,7 +30,10 @@ class Request:
         self._parse_content()
 
     def _parse_content(self):
-        lines = self._content.split("\n")
+        lines = [
+            line.strip() for line in
+            self._content.split("\n")
+        ]
         self._method, self._url, *_ = lines[0].split(" ")
         self._headers = {}
         for line in lines[1:]:
@@ -40,7 +43,7 @@ class Request:
             self._headers[line[0:colon_index].lower()] = (
                 line[colon_index + 2:]
             )
-        self._payload = "\n".join(lines[len(self._headers) + 2])
+        self._payload = "\n".join(lines[len(self._headers) + 2:])
         if "?" in self._url:
             self._location, parameter_string = self._url.split("?")
             self._get_parameters = {

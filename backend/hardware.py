@@ -38,8 +38,8 @@ class Hardware:
 
     def _read_dip_pins(self, indices: list[int]) -> int:
         value = 0
-        for index in indices:
-            value += self._dip_pins[index].value() << index
+        for i, index in enumerate(indices):
+            value += self._dip_pins[index].value() << i
         return value
 
     def leds_on(self):

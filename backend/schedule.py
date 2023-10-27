@@ -26,7 +26,7 @@ class Schedule:
     def start(self):
         self._timer.init(
             mode=Timer.PERIODIC,
-            period=config.time_reolution * 1000,
+            period=config.time_resolution * 1000,
             callback=self._timer_callback
         )
 
@@ -36,7 +36,7 @@ class Schedule:
 
     def join(self):
         while not self._done:
-            tu.sleep(config.time_reolution)
+            tu.sleep(config.time_resolution)
 
     def _timer_callback(self, timer: Timer):
         if not self._cancel_flag:

@@ -50,7 +50,7 @@ class Response:
     def status_line(self) -> str:
         return (
             f"HTTP/1.1 {self._status_code} "
-            f"{self.STATUS_CODES[self._status_code]}"
+            + f"{self.STATUS_CODES[self._status_code]}"
         )
 
     @property

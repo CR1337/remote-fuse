@@ -32,7 +32,7 @@ class Router:
     ) -> Response:
         content = json.dumps({
             'exception_type': str(type(exception)),
-            'exception_args': vars(exception),
+            'exception_args': "NOT_IMPLEMEMTED",  # TODOS
             'traceback': logger.get_traceback(exception)
         })
         return Response(
@@ -89,6 +89,7 @@ def endpoint_favicon(request: Request) -> Response:
 
 @router.route("/static/<path>", ['GET'])
 def endpoint_static(request: Request) -> Response:
+    # FIXME: doesnt work
     filename = request.path_parameter if request.path_parameter else ""
     try:
         with open("frontend/" + filename, 'r') as file:
@@ -181,6 +182,7 @@ def endpoint_logs(request: Request) -> Response:
 
 @router.route("/logs/<filename>", ['GET'])
 def endpoint_logs_filename(request: Request) -> Response:
+    # FIXME: doesnt work
     filename = request.path_parameter
     if logger.logfile_exists(filename):
         with open(logger.get_logfile_path(filename), 'r') as file:
@@ -195,6 +197,7 @@ def endpoint_logs_filename(request: Request) -> Response:
 
 @router.route("/logs/structured/<filename>", ['GET'])
 def endpoint_logs_structured_filename(request: Request) -> Response:
+    # FIXME: doesnt work
     filename = request.path_parameter
     if logger.logfile_exists(filename):
         structured_log = logger.get_log_structured_content(filename)
@@ -228,7 +231,7 @@ def endpoint_discover(request: Request) -> Response:
     config.master_port = request.client_port
     content = json.dumps({
         "device_id": config.device_id,
-        "is_remote": False
+        "is_remote": True
     })
     return Response(body=content)
 

@@ -129,18 +129,18 @@ class Program:
     def _thread_handler(self):
         self._seconds_paused = 0.0
         self._command_idx = 0
-        self._start_timestamp = tu.current_timestamp()
+        self._start_timestamp = tu.timestamp_now()
         self._running = True
 
-        hardware_was_locked = hardware.locked
+        hardware_was_locked = hardware.fuses_locked
         if hardware_was_locked:
-            hardware.unlock()
+            hardware.unlock_fuses()
         try:
             self._program_mainloop()
         finally:
             if hardware_was_locked:
                 tu.sleep(config.ignition_duration * 2)
-                hardware.lock()
+                hardware.lock_fuses()
 
         self._callback()
         self._running = False
@@ -151,13 +151,20 @@ class Program:
             if self._pause_flag:
                 self._seconds_paused += self._pause_handler()
                 for command in self._command_list:
-                    command.increae_timestamp(self._seconds_paused)
+                    command.increase_timestamp(self._seconds_paused)
                 if self._stop_flag:
                     break
 
             tu.sleep(config.time_resolution)
 
             command = self._command_list[self._command_idx]
+
+            print("MAINLOOP STEP")
+            print("COMMAND:", command)
+            print("COMMAND TIMESTAMP:", command.timestamp)
+            print("CURRENT TIMESTAMP:", self._current_timestamp)
+            print("TIMESTAMP NOW:", tu.timestamp_now())
+
             if command.timestamp <= self._current_timestamp:
                 try:
                     logger.debug(f"Light {command}", __file__)
@@ -173,14 +180,14 @@ class Program:
     def _pause_handler(self) -> float:
         self._last_current_timestamp_before_pause = self._current_timestamp
         self._paused = True
-        pause_started_timestamp = tu.current_timestamp()
+        pause_started_timestamp = tu.timestamp_now()
         while not self._continue_flag:
             if self._stop_flag:
-                pause_ended_timestamp = tu.current_timestamp()
+                pause_ended_timestamp = tu.timestamp_now()
                 return pause_ended_timestamp - pause_started_timestamp
             tu.sleep(config.time_resolution)
         self._pause_flag = False
         self._continue_flag = False
-        pause_ended_timestamp = tu.current_timestamp()
+        pause_ended_timestamp = tu.timestamp_now()
         self._paused = False
         return pause_ended_timestamp - pause_started_timestamp

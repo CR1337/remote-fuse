@@ -7,6 +7,7 @@ from backend.hardware import hardware
 class Network:
 
     CONNECTION_WAIT_TIME: float = 2.0  # seconds
+    STAT_CONNECTED: int = 2
 
     _wlan: network.WLAN
     _ip: str = ""
@@ -26,14 +27,12 @@ class Network:
             print("waiting for connection...")
             tu.sleep(cls.CONNECTION_WAIT_TIME)
 
-        if cls._wlan.isconnected():
+        if cls._wlan.isconnected() or cls._wlan.status() == cls.STAT_CONNECTED:
             print("connected to wlan")
             cls._ip = cls._wlan.ifconfig()[0]
             return
 
-        if cls._wlan.status() == 2:  # all is fine
-            return
-        elif cls._wlan.status() == network.STAT_WRONG_PASSWORD:
+        if cls._wlan.status() == network.STAT_WRONG_PASSWORD:
             hardware.panic("wrong wlan password")
         elif cls._wlan.status() == network.STAT_NO_AP_FOUND:
             hardware.panic("no wlan access point found")

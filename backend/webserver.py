@@ -24,12 +24,13 @@ class Webserver:
         self._open_connection()
         led.blink_short()
         while not self._shutdown:
-            try:
-                self._mainloop()
-            except Exception as ex:
-                if self._has_current_client:
-                    self._current_client.close()
-                hardware.panic(str(ex))
+            self._mainloop()  # TODO
+            # try:
+            #     self._mainloop()
+            # except Exception as ex:
+            #     if self._has_current_client:
+            #         self._current_client.close()
+            #     hardware.panic(str(ex))
 
     def _open_connection(self):
         host = socket.getaddrinfo('0.0.0.0', self.PORT)[0][-1]

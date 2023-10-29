@@ -37,7 +37,7 @@ class Command:
             callback=self._timer_callback,
         )
 
-    def increae_timestamp(self, offset: float):
+    def increase_timestamp(self, offset: float):
         self._timestamp += offset
 
     def get_state(self) -> dict:

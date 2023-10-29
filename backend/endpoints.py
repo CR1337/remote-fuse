@@ -10,16 +10,117 @@ from backend.logger import logger
 from backend.rl_exception import RlException
 
 
+class Endpoint:
+
+    _function: callable
+    _methods: list[str]
+    _url_parameter_names: dict[int, str]
+    _location: str
+
+    def __init__(
+        self,
+        function: callable,
+        methods: list[str],
+        url_parameter_names: dict[int, str],
+        location: str
+    ):
+        self._function = function
+        self._methods = methods
+        self._url_parameter_names = url_parameter_names
+        self._location = location
+
+    @property
+    def function(self) -> callable:
+        return self._function
+
+    @property
+    def methods(self) -> list[str]:
+        return self._methods
+
+    @property
+    def url_parameter_names(self) -> dict[int, str]:
+        return self._url_parameter_names
+
+    @property
+    def location(self) -> str:
+        return self._location
+
+    def __str__(self) -> str:
+        return repr(self)
+
+    def __repr__(self) -> str:
+        methods = str(self.methods).replace("'", "")
+        url_parameter_names = str(self.url_parameter_names).replace("'", "")
+        return (
+            f"\"Endpoint(methods={methods}, "
+            + f"url_parameter_names={url_parameter_names}, "
+            + f"location={self.location})\""
+        )
+
+
 class Router:
+
+    URL_PARAMETER_PREFIX: str = "<"
+    URL_PARAMETER_SUFFIX: str = ">"
+    URL_PAREMETER_KEY: str = r"{URL_PARAM}"
+    ROOT_SYMBOL: str = r"{ROOT}"
 
     _endpoints: dict
 
     def __init__(self):
-        self._endpoints = {}
+        self._endpoints = self._new_node()
+
+    def _new_node(self) -> dict:
+        return {
+            'endpoint': None,
+            'nodes': {}
+        }
+
+    def _split_location(self, location: str) -> list[str]:
+        directories = [self.ROOT_SYMBOL] + location.split("/")[1:]
+        if directories[-1] == "":
+            directories = directories[:-1]
+        return directories
+
+    def _register_endpoint(
+        self, location: str, methods: list[str], func: callable
+    ):
+        directories = self._split_location(location)
+
+        last_index = len(directories) - 1
+        node = self._endpoints
+        url_parameter_names = {}
+
+        for idx, directory in enumerate(directories):
+
+            key = directory
+            if (
+                directory[0] == self.URL_PARAMETER_PREFIX
+                and directory[-1] == self.URL_PARAMETER_SUFFIX
+            ):
+                url_parameter_name = directory[1:-1]
+                if url_parameter_name in url_parameter_names:
+                    hardware.panic(
+                        "duplicate path parameter name: ",
+                        + url_parameter_name
+                    )
+                url_parameter_names[idx] = url_parameter_name
+                key = self.URL_PAREMETER_KEY
+
+            if key not in node['nodes']:
+                node['nodes'][key] = self._new_node()
+            node = node['nodes'][key]
+
+            if idx == last_index and node['endpoint'] is not None:
+                hardware.panic(f"duplicate endpoint: {location}")
+
+        node['endpoint'] = Endpoint(
+            func, methods, url_parameter_names, location
+        )
 
     def route(self, location: str, methods: list[str]):
         def decorator(func):
-            self._endpoints[location] = (func, methods)
+            self._register_endpoint(location, methods, func)
 
             def wrapper(request: Request) -> Response:
                 return func(request)
@@ -32,7 +133,7 @@ class Router:
     ) -> Response:
         content = json.dumps({
             'exception_type': str(type(exception)),
-            'exception_args': "NOT_IMPLEMEMTED",  # TODOS
+            'exception_args': "NOT_IMPLEMEMTED",  # TODO
             'traceback': logger.get_traceback(exception)
         })
         return Response(
@@ -41,23 +142,40 @@ class Router:
         )
 
     def handle_request(self, request: Request) -> Response:
-        func, methods = self._endpoints.get(request.location, (None, [None]))
-        if func is None:
-            func, methods = self._endpoints.get(
-                request.location.split("/")[0], (None, [None])
-            )
-            if func is not None:
-                if (
-                    "<" not in request.location
-                    or ">" not in request.location
-                ):
-                    return Response(status_code=404)
-        if func is None:
+        directories = self._split_location(request.location)
+        last_index = len(directories) - 1
+        node = self._endpoints
+        url_parameter_values = {}
+
+        for idx, directory in enumerate(directories):
+
+            key = directory
+            if directory not in node['nodes']:
+                url_parameter_values[idx] = directory
+                key = self.URL_PAREMETER_KEY
+
+            node = node['nodes'].get(key, None)
+            if node is None:
+                return Response(status_code=404)
+
+            if idx == last_index and node['endpoint'] is None:
+                return Response(status_code=404)
+
+        endpoint = node['endpoint']
+
+        if len(endpoint.url_parameter_names) != len(url_parameter_values):
             return Response(status_code=404)
-        if request.method not in methods:
+        for value_idx, value in url_parameter_values.items():
+            name = endpoint.url_parameter_names.get(value_idx, None)
+            if name is None:
+                return Response(status_code=404)
+            request.url_parameters[name] = value
+
+        if request.method not in endpoint.methods:
             return Response(status_code=405)
+
         try:
-            return func(request)
+            return endpoint.function(request)
         except RlException as ex:
             return self._build_exception_response(ex, True)
         except Exception as ex:
@@ -90,7 +208,7 @@ def endpoint_favicon(request: Request) -> Response:
 @router.route("/static/<path>", ['GET'])
 def endpoint_static(request: Request) -> Response:
     # FIXME: doesnt work
-    filename = request.path_parameter if request.path_parameter else ""
+    filename = request.url_parameters['path']
     try:
         with open("frontend/" + filename, 'r') as file:
             content = file.read()
@@ -183,12 +301,10 @@ def endpoint_logs(request: Request) -> Response:
 @router.route("/logs/<filename>", ['GET'])
 def endpoint_logs_filename(request: Request) -> Response:
     # FIXME: doesnt work
-    filename = request.path_parameter
+    filename = request.url_parameters['filename']
     if logger.logfile_exists(filename):
-        with open(logger.get_logfile_path(filename), 'r') as file:
-            content = file.read()
         return Response(
-            body=content,
+            body=logger.get_log_file_content(filename),
             content_type=Response.CONTENT_TYPE_PLAIN
         )
     else:
@@ -198,7 +314,7 @@ def endpoint_logs_filename(request: Request) -> Response:
 @router.route("/logs/structured/<filename>", ['GET'])
 def endpoint_logs_structured_filename(request: Request) -> Response:
     # FIXME: doesnt work
-    filename = request.path_parameter
+    filename = request.url_parameters['filename']
     if logger.logfile_exists(filename):
         structured_log = logger.get_log_structured_content(filename)
         return Response(body=json.dumps(structured_log))

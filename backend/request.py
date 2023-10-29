@@ -16,7 +16,7 @@ class Request:
     _location: str
     _get_parameters: dict[str, str]
 
-    path_parameter: str | None
+    url_parameters: dict[str, str]
 
     def __init__(
         self, content: str, socket: socket.socket,
@@ -26,7 +26,7 @@ class Request:
         self._socket = socket
         self._client_address = client_address
         self._client_port = client_port
-        self.path_parameter = None
+        self.url_parameters = {}
         self._parse_content()
 
     def _parse_content(self):

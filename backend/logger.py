@@ -116,5 +116,12 @@ class Logger:
         except OSError:
             return False
 
+    def delete_all_logfiles(self):
+        for filename in self.get_log_files():
+            self.delete_logfile(filename)
+
+    def delete_logfile(self, filename: str):
+        os.remove(f"logs/{filename}")
+
 
 logger = Logger()

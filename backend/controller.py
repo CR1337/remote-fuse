@@ -30,13 +30,14 @@ class Controller:
         if self._program_state not in (self.STATE_NOT_LOADED,):
             raise RuntimeError()
         self._program = Program.from_json(name, json_data)
+        self._program_state = self.STATE_LOADED
         logger.debug(f"Program {name} loaded", __file__)
 
     def unload_program(self):
         logger.info("Unload program", __file__)
         if self._program_state not in (self.STATE_LOADED,):
             raise RuntimeError()
-        self._program = None
+        self._unload_program()
         logger.debug("Program unloaded", __file__)
 
     def schedule_program(self, time: str):
@@ -45,6 +46,7 @@ class Controller:
             raise RuntimeError()
         self._schedule = Schedule(time, self.run_program)
         self._schedule.start()
+        self._program_state = self.STATE_SCHEDULED
         logger.debug(f"Program scheduled for {time}", __file__)
 
     def unschedule_program(self):
@@ -53,6 +55,7 @@ class Controller:
             raise RuntimeError()
         self._schedule.cancel()
         self._schedule = None
+        self._program_state = self.STATE_LOADED
         logger.debug("Program unscheduled", __file__)
 
     def run_program(self):
@@ -60,6 +63,7 @@ class Controller:
         if self._program_state not in (self.STATE_LOADED,):
             raise RuntimeError()
         self._program.run(self._program_finished_callback)
+        self._program_state = self.STATE_RUNNING
         logger.debug("Program running", __file__)
 
     def pause_program(self):
@@ -67,6 +71,7 @@ class Controller:
         if self._program_state not in (self.STATE_RUNNING,):
             raise RuntimeError()
         self._program.pause()
+        self._program_state = self.STATE_PAUSED
         logger.debug("Program paused", __file__)
 
     def continue_program(self):
@@ -74,6 +79,7 @@ class Controller:
         if self._program_state not in (self.STATE_PAUSED,):
             raise RuntimeError()
         self._program.continue_()
+        self._program_state = self.STATE_RUNNING
         logger.debug("Program continued", __file__)
 
     def stop_program(self):
@@ -81,6 +87,7 @@ class Controller:
         if self._program_state not in (self.STATE_RUNNING, self.STATE_PAUSED):
             raise RuntimeError()
         self._program.stop()
+        self._unload_program()
         logger.debug("Program stopped", __file__)
 
     def run_testloop(self):
@@ -89,11 +96,15 @@ class Controller:
             raise RuntimeError()
         self._program = Program.testloop_program()
         self._program.run(self._program_finished_callback)
+        self._program_state = self.STATE_RUNNING
 
     def _program_finished_callback(self):
-        self._program_state = self.STATE_LOADED
-        self.unload_program()
+        self._unload_program()
         logger.info("Program finished", __file__)
+
+    def _unload_program(self):
+        self._program_state = self.STATE_NOT_LOADED
+        self._program = None
 
     def fire(self, letter: str, number: int):
         logger.info(f"Fire {letter}{number}", __file__)

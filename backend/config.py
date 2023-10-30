@@ -8,10 +8,10 @@ class Config:
     ADDRESS_BIT_INDICES: list[int] = [0, 1, 2, 3, 4, 5]
     FUSE_AMOUNT_BIT_INDICES: list[int] = [6, 7]
 
-    TIME_RESOLUTION: float = 0.1
-    IGNITION_DURATION: float = 0.1
-    EVENT_STREAM_PERIOD: float = 2.0
-    EVENT_STREAM_RETRY_PERIOD: float = 5.0
+    TIME_RESOLUTION: int = 100
+    IGNITION_DURATION: int = 100
+    EVENT_STREAM_PERIOD: int = 2000
+    EVENT_STREAM_RETRY_PERIOD: int = 5000
 
     _device_id: str
     _fuse_amount: int
@@ -35,7 +35,7 @@ class Config:
         return self._fuse_amount
 
     @property
-    def time_resolution(self) -> float:
+    def time_resolution(self) -> int:
         return self.TIME_RESOLUTION
 
     @property
@@ -43,11 +43,11 @@ class Config:
         return self.IGNITION_DURATION
 
     @property
-    def event_stream_period(self) -> float:
+    def event_stream_period(self) -> int:
         return self.EVENT_STREAM_PERIOD
 
     @property
-    def event_stream_retry_period(self) -> float:
+    def event_stream_retry_period(self) -> int:
         return self.EVENT_STREAM_RETRY_PERIOD
 
     @property
@@ -72,7 +72,7 @@ class Config:
         return {
             "device_id": self.device_id,
             "fuse_amount": self.fuse_amount,
-            "time_resolution": self.time_resolution,
+            "time_resolution": self.time_resolution / 1000,
             "ignition_duration": self.ignition_duration,
             "event_stream_period": self.event_stream_period,
             "event_stream_retry_period": self.event_stream_retry_period,

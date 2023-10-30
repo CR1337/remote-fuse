@@ -9,12 +9,12 @@ from backend.logger import logger
 class Command:
 
     _address: Address
-    _timestamp: float
+    _timestamp: int
     _name: str
     _fired: bool
     _fireing: bool
 
-    def __init__(self, address: Address, timestamp: float, name: str):
+    def __init__(self, address: Address, timestamp: int, name: str):
         self._address = address
         self._timestamp = timestamp
         self._name = name
@@ -33,17 +33,17 @@ class Command:
         self._fireing = True
         Timer().init(
             mode=Timer.ONE_SHOT,
-            period=int(config.ignition_duration * 1000),
+            period=int(config.ignition_duration),
             callback=self._timer_callback,
         )
 
-    def increase_timestamp(self, offset: float):
+    def increase_timestamp(self, offset: int):
         self._timestamp += offset
 
     def get_state(self) -> dict:
         return {
             'address': str(self._address),
-            'timestamp': self._timestamp,
+            'timestamp': self._timestamp / 1000,
             'name': self._name,
             'fired': self._fired,
             'fireing': self._fireing,

@@ -8,7 +8,7 @@ class Schedule:
 
     _scheduled_time: str
     _callback: callable
-    _timestamp: float
+    _timestamp: int
     _cancel_flag: bool
     _done: bool
     _faulty: bool
@@ -26,7 +26,7 @@ class Schedule:
     def start(self):
         self._timer.init(
             mode=Timer.PERIODIC,
-            period=config.time_resolution * 1000,
+            period=config.time_resolution,
             callback=self._timer_callback
         )
 
@@ -36,7 +36,7 @@ class Schedule:
 
     def join(self):
         while not self._done:
-            tu.sleep(config.time_resolution)
+            tu.sleep(config.time_resolution / 1000)
 
     def _timer_callback(self, timer: Timer):
         if not self._cancel_flag:
@@ -66,7 +66,7 @@ class Schedule:
 
     def get_state(self) -> dict:
         return {
-            'timestamp': self._timestamp,
+            'timestamp': self._timestamp / 1000,
             'seconds_left': self.seconds_left,
             'faulty': self._faulty,
             'scheduled_time': self._scheduled_time

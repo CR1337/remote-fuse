@@ -40,8 +40,8 @@ def get_system_time() -> str:
     return f"{y}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:{s:02d}.{000}"
 
 
-def timestamp_now() -> float:
-    return float(_current_seconds())
+def timestamp_now() -> int:
+    return _current_seconds() * 1000
 
 
 def string_to_timestamp(string: str) -> float:
@@ -61,7 +61,7 @@ def string_to_timestamp(string: str) -> float:
             0,
             0,
         )
-    ) + int(millisecond) / 1000
+    ) * 1000 + int(millisecond)
 
 
 def time_reached(timestamp: float) -> bool:

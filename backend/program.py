@@ -16,13 +16,13 @@ class Program:
     _name: str
     _command_list: list[Command]
 
-    _start_timestamp: float
+    _start_timestamp: int
     _callback: callable
     _command_idx: int
 
     _paused: bool
-    _seconds_paused: float
-    _last_current_timestamp_before_pause: float
+    _milliseconds_paused: int
+    _last_current_timestamp_before_pause: int
 
     _pause_flag: bool
     _continue_flag: bool
@@ -43,7 +43,7 @@ class Program:
                 continue
             command = Command(
                 address,
-                event['timestamp'],
+                event['timestamp'] * 1000,
                 event['name']
             )
             program.add_command(command)
@@ -53,7 +53,7 @@ class Program:
     def testloop_program(cls) -> 'Program':
         testloop = cls("Testloop")
         for idx, address in enumerate(Address.all_addresses()):
-            command = Command(address, idx / 4, str(address))
+            command = Command(address, idx / 4 * 1000, str(address))
             testloop.add_command(command)
         return testloop
 
@@ -66,7 +66,7 @@ class Program:
         self._command_idx = 0
 
         self._paused = False
-        self._seconds_paused = 0
+        self._milliseconds_paused = 0
         self._last_current_timestamp_before_pause = None
 
         self._pause_flag = False
@@ -95,7 +95,7 @@ class Program:
 
     def join(self):
         while self._running:
-            tu.sleep(config.time_resolution)
+            tu.sleep(config.time_resolution / 1000)
 
     @property
     def is_running(self) -> bool:
@@ -112,9 +112,9 @@ class Program:
                 cmd.get_state()
                 for cmd in self._command_list
             ],
-            'time_paused': self._seconds_paused,
-            'start_timestamp': self._start_timestamp,
-            'current_timestamp': self._current_timestamp,
+            'time_paused': self._milliseconds_paused / 1000,
+            'start_timestamp': self._start_timestamp / 1000,
+            'current_timestamp': self._current_timestamp / 1000,
             'is_running': self.is_running
         }
 
@@ -127,7 +127,7 @@ class Program:
         return tu.timestamp_now() - self._start_timestamp
 
     def _thread_handler(self):
-        self._seconds_paused = 0.0
+        self._milliseconds_paused = 0.0
         self._command_idx = 0
         self._start_timestamp = tu.timestamp_now()
         self._running = True
@@ -139,7 +139,7 @@ class Program:
             self._program_mainloop()
         finally:
             if hardware_was_locked:
-                tu.sleep(config.ignition_duration * 2)
+                tu.sleep(config.ignition_duration / 1000 * 2)
                 hardware.lock_fuses()
 
         self._callback()
@@ -149,13 +149,13 @@ class Program:
         while not self._stop_flag and self._command_list:
 
             if self._pause_flag:
-                self._seconds_paused += self._pause_handler()
+                self._milliseconds_paused += self._pause_handler()
                 for command in self._command_list:
-                    command.increase_timestamp(self._seconds_paused)
+                    command.increase_timestamp(self._milliseconds_paused)
                 if self._stop_flag:
                     break
 
-            tu.sleep(config.time_resolution)
+            tu.sleep(config.time_resolution / 1000)
 
             command = self._command_list[self._command_idx]
 
@@ -185,7 +185,7 @@ class Program:
             if self._stop_flag:
                 pause_ended_timestamp = tu.timestamp_now()
                 return pause_ended_timestamp - pause_started_timestamp
-            tu.sleep(config.time_resolution)
+            tu.sleep(config.time_resolution / 1000)
         self._pause_flag = False
         self._continue_flag = False
         pause_ended_timestamp = tu.timestamp_now()

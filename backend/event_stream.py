@@ -38,7 +38,7 @@ class EventStream:
     def _set_timer(self):
         Timer().init(
             mode=Timer.ONE_SHOT,
-            period=int(config.event_stream_period * 1000),
+            period=int(config.event_stream_period),
             callback=self._timer_callback
         )
 
@@ -54,7 +54,7 @@ class EventStream:
 
     def _event_content(self) -> str:
         data = controller.get_state()
-        content = f"retry: {config.event_stream_retry_period * 1000}\n"
+        content = f"retry: {config.event_stream_retry_period}\n"
         content += f"data: {json.dumps(data)}\n"
         content += f"id: {self._counter}\n\n"
         return content

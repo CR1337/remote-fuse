@@ -1,4 +1,5 @@
 .micropico
+.venv/
 .vscode/
 wlan.json
 logs/*.log

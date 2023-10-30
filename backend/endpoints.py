@@ -207,7 +207,6 @@ def endpoint_favicon(request: Request) -> Response:
 
 @router.route("/static/<path>", ['GET'])
 def endpoint_static(request: Request) -> Response:
-    # FIXME: doesnt work
     filename = request.url_parameters['path']
     try:
         with open("frontend/" + filename, 'r') as file:
@@ -293,27 +292,31 @@ def endpoint_state(request: Request) -> Response:
     return Response(body=json.dumps(controller.get_state()))
 
 
-@router.route("/logs", ['GET'])
+@router.route("/logs", ['GET', 'DELETE'])
 def endpoint_logs(request: Request) -> Response:
-    return Response(body=json.dumps(logger.get_log_files()))
+    if request.method == 'GET':
+        return Response(body=json.dumps(logger.get_log_files()))
+    elif request.method == 'DELETE':
+        ...  # TODO
 
 
-@router.route("/logs/<filename>", ['GET'])
+@router.route("/logs/<filename>", ['GET', 'DELETE'])
 def endpoint_logs_filename(request: Request) -> Response:
-    # FIXME: doesnt work
     filename = request.url_parameters['filename']
     if logger.logfile_exists(filename):
-        return Response(
-            body=logger.get_log_file_content(filename),
-            content_type=Response.CONTENT_TYPE_PLAIN
-        )
+        if request.method == 'GET':
+            return Response(
+                body=logger.get_log_file_content(filename),
+                content_type=Response.CONTENT_TYPE_PLAIN
+            )
+        elif request.method == 'DELETE':
+            ...  # TODO
     else:
         return Response(status_code=404)
 
 
 @router.route("/logs/structured/<filename>", ['GET'])
 def endpoint_logs_structured_filename(request: Request) -> Response:
-    # FIXME: doesnt work
     filename = request.url_parameters['filename']
     if logger.logfile_exists(filename):
         structured_log = logger.get_log_structured_content(filename)
@@ -329,8 +332,8 @@ def endpoint_config(request: Request) -> Response:
             "device_id": config.device_id,
             "fuse_amount": config.fuse_amount,
             "time_resolution": config.time_resolution,
-            "ignition_duration": config.ignition_duration
-        })
+            "ignition_duration": config.ignition_duration / 1000
+        })  # TODO: put dict creation into config
         return Response(body=content)
     elif request.method == 'POST':
         return Response(status_code=501)

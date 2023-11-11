@@ -4,3 +4,4 @@
 wlan.json
 logs/*.log
 logs/traceback.txt
+*.pyc

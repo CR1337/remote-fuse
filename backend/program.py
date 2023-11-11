@@ -142,13 +142,14 @@ class Program:
                 tu.sleep(config.ignition_duration / 1000 * 2)
                 hardware.lock_fuses()
 
-        self._callback()
         self._running = False
+        self._callback()
 
     def _program_mainloop(self):
-        while not self._stop_flag and self._command_list:
+        while (not self._stop_flag) and self._command_list:
 
             if self._pause_flag:
+                print("PROGRAM ENTERS PAUSE")
                 self._milliseconds_paused += self._pause_handler()
                 for command in self._command_list:
                     command.increase_timestamp(self._milliseconds_paused)
@@ -159,11 +160,11 @@ class Program:
 
             command = self._command_list[self._command_idx]
 
-            print("MAINLOOP STEP")
-            print("COMMAND:", command)
-            print("COMMAND TIMESTAMP:", command.timestamp)
-            print("CURRENT TIMESTAMP:", self._current_timestamp)
-            print("TIMESTAMP NOW:", tu.timestamp_now())
+            # print("MAINLOOP STEP")
+            # print("COMMAND:", command)
+            # print("COMMAND TIMESTAMP:", command.timestamp)
+            # print("CURRENT TIMESTAMP:", self._current_timestamp)
+            # print("TIMESTAMP NOW:", tu.timestamp_now())
 
             if command.timestamp <= self._current_timestamp:
                 try:

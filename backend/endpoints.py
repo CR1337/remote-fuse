@@ -142,6 +142,14 @@ class Router:
         )
 
     def handle_request(self, request: Request) -> Response:
+        # FIXME
+        import gc
+        import os
+        s = os.statvfs('/')
+        print(f"Free storage: {s[0]*s[3]/1024} KB")
+        total_mem = gc.mem_alloc() + gc.mem_free()
+        print(f"Memory: {gc.mem_alloc()} of {total_mem} bytes used.")
+
         directories = self._split_location(request.location)
         last_index = len(directories) - 1
         node = self._endpoints
@@ -211,7 +219,7 @@ def endpoint_static(request: Request) -> Response:
     try:
         with open("frontend/" + filename, 'r') as file:
             content = file.read()
-    except FileNotFoundError:
+    except OSError:
         return Response(status_code=404)
     else:
         return Response(body=content, content_type=Response.CONTENT_TYPE_PLAIN)
@@ -222,7 +230,7 @@ def endpoint_program(request: Request) -> Response:
     if request.method == 'POST':
         json_data = request.json_payload
         controller.load_program(json_data['name'], json_data['event_list'])
-    elif request.method == 'GET':
+    elif request.method == 'DELETE':
         controller.unload_program()
 
     return Response()
@@ -231,6 +239,7 @@ def endpoint_program(request: Request) -> Response:
 @router.route("/program/control", ['POST'])
 def endpoint_program_control(request: Request) -> Response:
     action = request.json_payload['action']
+    print(f"ACTION: {action}")
     if action == 'run':
         controller.run_program()
     elif action == 'pause':
@@ -298,6 +307,7 @@ def endpoint_logs(request: Request) -> Response:
         return Response(body=json.dumps(logger.get_log_files()))
     elif request.method == 'DELETE':
         logger.delete_all_logfiles()
+        return Response()
 
 
 @router.route("/logs/<filename>", ['GET', 'DELETE'])
@@ -311,6 +321,7 @@ def endpoint_logs_filename(request: Request) -> Response:
             )
         elif request.method == 'DELETE':
             logger.delete_logfile(filename)
+            return Response()
     else:
         return Response(status_code=404)
 

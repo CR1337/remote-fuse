@@ -6,6 +6,27 @@ from backend.config import config
 from backend.schedule import Schedule
 from backend.logger import logger
 from backend.hardware import hardware
+from backend.rl_exception import RlException
+
+
+class ProgramAlreadyLoaded(RlException):
+    pass
+
+
+class NotProgramLoaded(RlException):
+    pass
+
+
+class NoProgramScheduled(RlException):
+    pass
+
+
+class NoProgramRunning(RlException):
+    pass
+
+
+class NoProgramPaused(RlException):
+    pass
 
 
 class Controller:
@@ -28,7 +49,7 @@ class Controller:
     def load_program(self, name: str, json_data: list):
         logger.info(f"Load program {name}", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
-            raise RuntimeError()
+            raise ProgramAlreadyLoaded()
         self._program = Program.from_json(name, json_data)
         self._program_state = self.STATE_LOADED
         logger.debug(f"Program {name} loaded", __file__)
@@ -36,14 +57,14 @@ class Controller:
     def unload_program(self):
         logger.info("Unload program", __file__)
         if self._program_state not in (self.STATE_LOADED,):
-            raise RuntimeError()
+            raise NotProgramLoaded()
         self._unload_program()
         logger.debug("Program unloaded", __file__)
 
     def schedule_program(self, time: str):
         logger.info(f"Schedule program for {time}", __file__)
         if self._program_state not in (self.STATE_LOADED,):
-            raise RuntimeError()
+            raise NotProgramLoaded()
         self._schedule = Schedule(time, self.run_program)
         self._schedule.start()
         self._program_state = self.STATE_SCHEDULED
@@ -52,7 +73,7 @@ class Controller:
     def unschedule_program(self):
         logger.info("Unschedule program", __file__)
         if self._program_state not in (self.STATE_SCHEDULED,):
-            raise RuntimeError()
+            raise NoProgramScheduled()
         self._schedule.cancel()
         self._schedule = None
         self._program_state = self.STATE_LOADED
@@ -61,7 +82,7 @@ class Controller:
     def run_program(self):
         logger.info("Run program", __file__)
         if self._program_state not in (self.STATE_LOADED,):
-            raise RuntimeError()
+            raise NotProgramLoaded()
         self._program.run(self._program_finished_callback)
         self._program_state = self.STATE_RUNNING
         logger.debug("Program running", __file__)
@@ -69,7 +90,7 @@ class Controller:
     def pause_program(self):
         logger.info("Pause program", __file__)
         if self._program_state not in (self.STATE_RUNNING,):
-            raise RuntimeError()
+            raise NoProgramRunning()
         self._program.pause()
         self._program_state = self.STATE_PAUSED
         logger.debug("Program paused", __file__)
@@ -77,7 +98,7 @@ class Controller:
     def continue_program(self):
         logger.info("Continue program", __file__)
         if self._program_state not in (self.STATE_PAUSED,):
-            raise RuntimeError()
+            raise NoProgramPaused()
         self._program.continue_()
         self._program_state = self.STATE_RUNNING
         logger.debug("Program continued", __file__)
@@ -85,7 +106,7 @@ class Controller:
     def stop_program(self):
         logger.info("Stop program", __file__)
         if self._program_state not in (self.STATE_RUNNING, self.STATE_PAUSED):
-            raise RuntimeError()
+            raise NoProgramRunning()
         self._program.stop()
         self._unload_program()
         logger.debug("Program stopped", __file__)
@@ -93,7 +114,7 @@ class Controller:
     def run_testloop(self):
         logger.info("Run testloop", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
-            raise RuntimeError()
+            raise ProgramAlreadyLoaded()
         self._program = Program.testloop_program()
         self._program.run(self._program_finished_callback)
         self._program_state = self.STATE_RUNNING
@@ -109,7 +130,7 @@ class Controller:
     def fire(self, letter: str, number: int):
         logger.info(f"Fire {letter}{number}", __file__)
         if self._program_state not in (self.STATE_NOT_LOADED,):
-            raise RuntimeError()
+            raise ProgramAlreadyLoaded()
         address = Address(config.device_id, letter, number)
         command = Command(address, 0, f"manual_fire_command_{address}")
         command.light()

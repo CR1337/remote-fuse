@@ -94,5 +94,9 @@ class Request:
     def json_payload(self) -> dict:
         try:
             return json.loads(self._payload)
-        except json.decode.JSONDecodeError:
+        except json.JSONDecodeError:
             return {}
+
+    @property
+    def content(self) -> str:
+        return self._content

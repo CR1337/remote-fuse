@@ -44,6 +44,21 @@ class Webserver:
             self._connection.accept()
         )
         raw_request = self._current_client.recv(1024).decode('ascii')
+        content_length_idx = raw_request.find('Content-Length: ')
+        if content_length_idx != -1:
+            next_line_idx = raw_request.find('\r\n', content_length_idx)
+            content_length = int(
+                raw_request[content_length_idx + 16:next_line_idx].strip()
+            )
+            emptyline_idx = raw_request.find('\r\n\r\n')
+            header_length = emptyline_idx + 4
+            body_length = len(raw_request) - header_length
+            print("START LOOP")
+            while body_length < content_length:
+                chunk = self._current_client.recv(1024).decode('ascii')
+                raw_request += chunk
+                body_length += len(chunk)
+            print("END LOOP")
         request = Request(
             raw_request,
             self._current_client,
@@ -54,7 +69,10 @@ class Webserver:
         self._current_client.send(response.content)
         if not response.keep_alive:
             self._current_client.close()
-        print(f"{client_address} > {request.url} ({response.status_code})")
+        print(
+            f"{client_address} > {request.method} "
+            + f"{request.url} ({response.status_code})"
+        )
 
 
 webserver = Webserver()

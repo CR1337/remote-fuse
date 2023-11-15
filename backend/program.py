@@ -1,11 +1,11 @@
-from backend import time_util as tu
-from backend.address import Address
-from backend.config import config
-from backend.hardware import hardware
 from backend.command import Command
 from backend.rl_exception import RlException
+from backend.config import config
+from backend.address import Address
+import backend.time_util as tu
+from machine import Timer
+from backend.hardware import hardware
 from backend.logger import logger
-import _thread
 
 
 class Program:
@@ -16,19 +16,23 @@ class Program:
     _name: str
     _command_list: list[Command]
 
-    _start_timestamp: int
-    _callback: callable
-    _command_idx: int
-
-    _paused: bool
-    _milliseconds_paused: int
-    _last_current_timestamp_before_pause: int
-
+    _stop_flag: bool
     _pause_flag: bool
     _continue_flag: bool
-    _stop_flag: bool
-
+    _paused: bool
     _running: bool
+
+    _command_index: int | None
+
+    _start_timestamp: int | None
+    _pause_timestamp: int | None
+    _milliseconds_paused: int | None
+    _total_milliseconds_paused: int
+    _last_current_timestamp_before_pause: int | None
+
+    _callback: callable | None
+
+    _timer: Timer
 
     @classmethod
     def from_json(cls, name: str, json_data: list) -> 'Program':
@@ -61,27 +65,40 @@ class Program:
         self._name = name
         self._command_list = []
 
-        self._start_timestamp = None
-        self._callback = None
-        self._command_idx = 0
-
-        self._paused = False
-        self._milliseconds_paused = 0
-        self._last_current_timestamp_before_pause = None
-
+        self._stop_flag = False
         self._pause_flag = False
         self._continue_flag = False
-        self._stop_flag = False
-
+        self._paused = False
         self._running = False
+
+        self._command_index = None
+
+        self._start_timestamp = None
+        self._pause_timestamp = None
+        self._last_current_timestamp_before_pause = None
+        self._milliseconds_paused = None
+        self._total_milliseconds_paused = 0
+        self._last_current_timestamp_before_pause = None
+
+        self._callback = None
+
+        self._timer = Timer()
 
     def add_command(self, command: Command):
         self._command_list.append(command)
 
     def run(self, callback: callable):
-        self._command_list.sort(key=lambda c: c.timestamp)
+        self._start_timestamp = tu.timestamp_now()
+        self._milliseconds_paused = 0
+        self._command_index = 0
+        self._running = True
         self._callback = callback
-        _thread.start_new_thread(self._thread_handler, ())
+
+        self._timer.init(
+            mode=Timer.PERIODIC,
+            period=config.time_resolution,
+            callback=self._timer_callback
+        )
 
     def pause(self):
         self._pause_flag = True
@@ -97,14 +114,6 @@ class Program:
         while self._running:
             tu.sleep(config.time_resolution / 1000)
 
-    @property
-    def is_running(self) -> bool:
-        return self._running
-
-    @property
-    def name(self) -> str:
-        return self._name
-
     def get_state(self) -> dict:
         return {
             'name': self._name,
@@ -112,83 +121,76 @@ class Program:
                 cmd.get_state()
                 for cmd in self._command_list
             ],
-            'time_paused': self._milliseconds_paused / 1000,
+            'time_paused': self._total_milliseconds_paused / 1000,
             'start_timestamp': self._start_timestamp / 1000,
-            'current_timestamp': self._current_timestamp / 1000,
-            'is_running': self.is_running
+            'current_timestamp': self._current_timestamp() / 1000,
+            'is_running': self._running
         }
 
-    @property
-    def _current_timestamp(self) -> float:
+    def _current_timestamp(self) -> int | None:
         if self._paused:
             return self._last_current_timestamp_before_pause
         if self._start_timestamp is None:
             return None
         return tu.timestamp_now() - self._start_timestamp
 
-    def _thread_handler(self):
-        self._milliseconds_paused = 0.0
-        self._command_idx = 0
-        self._start_timestamp = tu.timestamp_now()
-        self._running = True
+    @property
+    def name(self) -> str:
+        return self._name
 
-        hardware_was_locked = hardware.fuses_locked
-        if hardware_was_locked:
-            hardware.unlock_fuses()
-        try:
-            self._program_mainloop()
-        finally:
-            if hardware_was_locked:
-                tu.sleep(config.ignition_duration / 1000 * 2)
-                hardware.lock_fuses()
+    @property
+    def running(self) -> bool:
+        return self._running
 
-        self._running = False
+    def _cleanup(self):
+        self._timer.deinit()
+        self._stop_flag = False
         self._callback()
+        self._running = False
 
-    def _program_mainloop(self):
-        while (not self._stop_flag) and self._command_list:
+    def _timer_callback(self, _: Timer):
+        if self._stop_flag or not self._command_list:
+            self._cleanup()
+        elif self._pause_flag:
+            self._init_pause()
+        elif self._paused:
+            self._pause_handler()
+        else:
+            self._command_handler()
 
-            if self._pause_flag:
-                print("PROGRAM ENTERS PAUSE")
-                self._milliseconds_paused += self._pause_handler()
-                for command in self._command_list:
-                    command.increase_timestamp(self._milliseconds_paused)
-                if self._stop_flag:
-                    break
-
-            tu.sleep(config.time_resolution / 1000)
-
-            command = self._command_list[self._command_idx]
-
-            # print("MAINLOOP STEP")
-            # print("COMMAND:", command)
-            # print("COMMAND TIMESTAMP:", command.timestamp)
-            # print("CURRENT TIMESTAMP:", self._current_timestamp)
-            # print("TIMESTAMP NOW:", tu.timestamp_now())
-
-            if command.timestamp <= self._current_timestamp:
-                try:
-                    logger.debug(f"Light {command}", __file__)
-                    command.light()
-                except Exception as ex:
-                    logger.exception(
-                        "Exception while fireing {command}", ex, __file__
-                    )
-                self._command_idx += 1
-                if self._command_idx >= len(self._command_list):
-                    break
-
-    def _pause_handler(self) -> float:
-        self._last_current_timestamp_before_pause = self._current_timestamp
-        self._paused = True
-        pause_started_timestamp = tu.timestamp_now()
-        while not self._continue_flag:
-            if self._stop_flag:
-                pause_ended_timestamp = tu.timestamp_now()
-                return pause_ended_timestamp - pause_started_timestamp
-            tu.sleep(config.time_resolution / 1000)
+    def _init_pause(self):
         self._pause_flag = False
+        self._paused = True
+        self._pause_timestamp = tu.timestamp_now()
+        self._milliseconds_paused = 0
+        self._last_current_timestamp_before_pause = (
+            tu.timestamp_now() - self._start_timestamp
+        )
+        self._pause_handler()
+
+    def _pause_handler(self):
+        if self._continue_flag:
+            self._continue_handler()
+
+    def _continue_handler(self):
         self._continue_flag = False
-        pause_ended_timestamp = tu.timestamp_now()
         self._paused = False
-        return pause_ended_timestamp - pause_started_timestamp
+        self._milliseconds_paused = tu.timestamp_now() - self._pause_timestamp
+        self._total_milliseconds_paused += self._milliseconds_paused
+        for command in self._command_list[self._command_index:]:
+            command.increase_timestamp(self._milliseconds_paused)
+        self._command_handler()
+
+    def _command_handler(self):
+        command = self._command_list[self._command_index]
+        if command.seconds_left <= 0:
+            try:
+                logger.debug(f"Light {command}", __file__)
+                command.light()
+            except Exception as ex:
+                logger.exception(
+                    "Exception while fireing {command}", ex, __file__
+                )
+            self._command_index += 1
+            if self._command_index >= len(self._command_list):
+                self._cleanup()

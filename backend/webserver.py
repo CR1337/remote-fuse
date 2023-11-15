@@ -53,12 +53,10 @@ class Webserver:
             emptyline_idx = raw_request.find('\r\n\r\n')
             header_length = emptyline_idx + 4
             body_length = len(raw_request) - header_length
-            print("START LOOP")
             while body_length < content_length:
                 chunk = self._current_client.recv(1024).decode('ascii')
                 raw_request += chunk
                 body_length += len(chunk)
-            print("END LOOP")
         request = Request(
             raw_request,
             self._current_client,

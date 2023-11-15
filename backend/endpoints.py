@@ -142,14 +142,6 @@ class Router:
         )
 
     def handle_request(self, request: Request) -> Response:
-        # FIXME
-        import gc
-        import os
-        s = os.statvfs('/')
-        print(f"Free storage: {s[0]*s[3]/1024} KB")
-        total_mem = gc.mem_alloc() + gc.mem_free()
-        print(f"Memory: {gc.mem_alloc()} of {total_mem} bytes used.")
-
         directories = self._split_location(request.location)
         last_index = len(directories) - 1
         node = self._endpoints
@@ -273,14 +265,7 @@ def endpoint_testloop(request: Request) -> Response:
 
 @router.route("/lock", ['POST'])
 def endpoint_lock(request: Request) -> Response:
-    is_locked = request.json_payload.get("is_locked", None)
-    if is_locked is None:
-        return Response(status_code=400)
-    if is_locked:
-        hardware.lock_fuses()
-    else:
-        hardware.unlock_fuses()
-    return Response()
+    return Response(status_code=501)
 
 
 @router.route("/system-time", ['GET'])

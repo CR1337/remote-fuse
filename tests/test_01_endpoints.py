@@ -169,7 +169,7 @@ def test_unlock():
         f"{URL}/lock",
         json={'is_locked': False}
     )
-    _assert_standard_response(response, [200])
+    _assert_standard_response(response, [501])
 
 
 def test_fire():
@@ -188,7 +188,7 @@ def test_lock():
         f"{URL}/lock",
         json={'is_locked': True}
     )
-    _assert_standard_response(response, [200])
+    _assert_standard_response(response, [501])
 
 
 def test_testloop():

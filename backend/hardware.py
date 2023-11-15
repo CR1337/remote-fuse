@@ -18,7 +18,6 @@ class Hardware:
 
     _remote_device_index: int
     _fuse_amount: int
-    _fuses_locked: bool
 
     def __init__(self):
         self._dip_pins = [Pin(id_, Pin.IN) for id_ in self.DIP_PIN_IDS]
@@ -34,7 +33,6 @@ class Hardware:
         self._fuse_amount = self._read_dip_pins(
             self.FUSE_AMOUNT_BIT_INDICES
         ) + 1
-        self._fuses_locked = True
 
     def _read_dip_pins(self, indices: list[int]) -> int:
         value = 0
@@ -52,20 +50,11 @@ class Hardware:
 
     def fuse_on(self, index: int):
         logger.debug(f"Fuse {index} on", __file__)
-        if not self._fuses_locked:
-            self._fuse_pins[index].value(1)
+        self._fuse_pins[index].value(1)
 
     def fuse_off(self, index: int):
         logger.debug(f"Fuse {index} off", __file__)
         self._fuse_pins[index].value(0)
-
-    def lock_fuses(self):
-        logger.debug("Lock Hardware", __file__)
-        self._fuses_locked = True
-
-    def unlock_fuses(self):
-        logger.debug("Unlock Hardware", __file__)
-        self._fuses_locked = False
 
     @property
     def fuses_locked(self) -> bool:
@@ -124,7 +113,7 @@ class Hardware:
 
     def get_state(self) -> dict:
         return {
-            "is_locked": self.fuses_locked
+            "is_locked": False
         }
 
 

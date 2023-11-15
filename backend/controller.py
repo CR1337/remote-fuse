@@ -81,7 +81,9 @@ class Controller:
 
     def run_program(self):
         logger.info("Run program", __file__)
-        if self._program_state not in (self.STATE_LOADED,):
+        if self._program_state not in (
+            self.STATE_LOADED, self.STATE_SCHEDULED
+        ):
             raise NotProgramLoaded()
         self._program.run(self._program_finished_callback)
         self._program_state = self.STATE_RUNNING

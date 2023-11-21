@@ -95,7 +95,7 @@ class Program:
         self._callback = callback
 
         self._timer.init(
-            mode=Timer.PERIODIC,
+            mode=Timer.ONE_SHOT,
             period=config.time_resolution,
             callback=self._timer_callback
         )
@@ -157,6 +157,12 @@ class Program:
             self._pause_handler()
         else:
             self._command_handler()
+        if self._running:
+            self._timer.init(
+                mode=Timer.ONE_SHOT,
+                period=config.time_resolution,
+                callback=self._timer_callback
+            )
 
     def _init_pause(self):
         self._pause_flag = False
@@ -182,8 +188,11 @@ class Program:
         self._command_handler()
 
     def _command_handler(self):
+        if self._command_index >= len(self._command_list):
+            self._cleanup()
+            return
         command = self._command_list[self._command_index]
-        if command.seconds_left <= 0:
+        if command.milliseconds_left(self._start_timestamp) <= 0:
             try:
                 logger.debug(f"Light {command}", __file__)
                 command.light()
@@ -192,5 +201,3 @@ class Program:
                     "Exception while fireing {command}", ex, __file__
                 )
             self._command_index += 1
-            if self._command_index >= len(self._command_list):
-                self._cleanup()

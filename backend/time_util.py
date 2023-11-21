@@ -48,7 +48,7 @@ def string_to_timestamp(string: str) -> float:
     date_part, time_part = string.split("T")
     year, month, day = date_part.split("-")
     hour, minute, second = time_part.split(":")
-    second, millisecond = second.split(".")
+    second, fraction = second.split(".")
     return time.mktime(
         (
             int(year),
@@ -61,10 +61,12 @@ def string_to_timestamp(string: str) -> float:
             0,
             0,
         )
-    ) * 1000 + int(millisecond)
+    ) * 1000 + int(float(f"0.{fraction}") * 1000) + MACHINE_TIME_ORIGIN * 1000
 
 
 def time_reached(timestamp: float) -> bool:
+    if timestamp_now() >= timestamp:
+        print("REACHED:", timestamp_now(), timestamp)
     return timestamp_now() >= timestamp
 
 

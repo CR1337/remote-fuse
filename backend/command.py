@@ -57,9 +57,8 @@ class Command:
     def timestamp(self) -> float:
         return self._timestamp
 
-    @property
-    def seconds_left(self) -> float:
-        return self._timestamp - tu.timestamp_now()
+    def milliseconds_left(self, start_timestamp: int) -> int:
+        return self._timestamp - (tu.timestamp_now() - start_timestamp)
 
     @property
     def name(self) -> str:

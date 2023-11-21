@@ -61,13 +61,13 @@ class Schedule:
         return self._timestamp
 
     @property
-    def seconds_left(self) -> float:
+    def milliseconds_left(self) -> float:
         return self._timestamp - tu.timestamp_now()
 
     def get_state(self) -> dict:
         return {
             'timestamp': self._timestamp / 1000,
-            'seconds_left': self.seconds_left,
+            'seconds_left': self.milliseconds_left / 1000,
             'faulty': self._faulty,
             'scheduled_time': self._scheduled_time
         }

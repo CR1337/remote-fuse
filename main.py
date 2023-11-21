@@ -14,17 +14,17 @@ def entrypoint():
     webserver.run()
 
 
-entrypoint()
+# entrypoint()
 
 
-# try:
-#     entrypoint()
-# except Exception as ex:
-#     logger.exception("Exception running app!", ex, "main.py")
-# except (KeyboardInterrupt, SystemExit):
-#     logger.info(
-#         "Termination due to KeyboardInterrupt or SystemExit.", "main.py"
-#     )
-# finally:
-#     pass
-#     # hardware.shutdown()
+try:
+    entrypoint()
+except Exception as ex:
+    logger.exception("Exception running app!", ex, "main.py")
+except (KeyboardInterrupt, SystemExit):
+    logger.info(
+        "Termination due to KeyboardInterrupt or SystemExit.", "main.py"
+    )
+finally:
+    # pass
+    hardware.shutdown()

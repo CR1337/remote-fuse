@@ -12,7 +12,7 @@ PORT: int = 5000
 DEVICE_ID: str = "remote0"
 FUSE_AMOUNT: int = 4
 
-WAIT_BETWEEN_FUSES: float = 2.0
+WAIT_BETWEEN_FUSES: float = 4.0
 WAIT_BEFORE_TEST: float = 2.0
 
 URL: str = f"http://{IP}:{PORT}"
@@ -150,7 +150,6 @@ def test_program_control_continue():
         json={'action': 'continue'}
     )
     _assert_standard_response(response, [200])
-    time.sleep(WAIT_BETWEEN_FUSES * (FUSE_AMOUNT // 2))
 
 
 def test_program_control_stop():
@@ -246,7 +245,7 @@ def test_logs_file_get():
 def test_logs_structured_file():
     time.sleep(WAIT_BEFORE_TEST)
     last_log = requests.get(f"{URL}/logs").json()[-1]
-    response = requests.get(f"{URL}/logs/stuctured/{last_log}")
+    response = requests.get(f"{URL}/logs/structured/{last_log}")
     assert response.status_code == 200
     assert "application/json" in response.headers["Content-Type"]
     assert all(key in event for event in response.json() for key in [

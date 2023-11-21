@@ -22,7 +22,16 @@ class Logger:
             os.stat("/logs")
         except OSError:
             os.mkdir("/logs")
-        self._filename = f"logs/remote-{str(tu.get_system_time())}.log"
+        self._set_filename()
+
+    def _set_filename(self):
+        taken_numbers = [
+            int(filename.split(".")[0])
+            for filename in os.listdir("/logs")
+            if filename.endswith(".log")
+        ] + [-1]
+        number = max(taken_numbers) + 1
+        self._filename = f"logs/{number}.log"
 
     def _log(self, level: str, message: str, filename: str):
         time_string = tu.get_system_time().split(".")[0]

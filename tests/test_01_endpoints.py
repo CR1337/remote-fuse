@@ -1,7 +1,6 @@
 import pytest
 import requests
 import time
-import json
 from datetime import datetime as dt
 from datetime import timedelta
 from typing import Any, Dict, List
@@ -13,7 +12,7 @@ DEVICE_ID: str = "remote0"
 FUSE_AMOUNT: int = 4
 
 WAIT_BETWEEN_FUSES: float = 4.0
-WAIT_BEFORE_TEST: float = 2.0
+WAIT_BEFORE_TEST: float = 1.0
 
 URL: str = f"http://{IP}:{PORT}"
 
@@ -203,6 +202,22 @@ def test_system_time():
     assert response.status_code == 200
     assert "application/json" in response.headers["Content-Type"]
     assert 'system-time' in response.json()
+    system_time = response.json()['system-time']
+    date, time_ = system_time.split("T")
+    year, month, day = date.split("-")
+    hour, minute, second = time_.split(":")
+    second, fraction = second.split(".")
+    datetime = dt(
+        year=int(year),
+        month=int(month),
+        day=int(day),
+        hour=int(hour),
+        minute=int(minute),
+        second=int(second),
+        microsecond=int(fraction) * 1000
+    )
+    assert datetime <= dt.now() + timedelta(seconds=1)
+    assert datetime >= dt.now() - timedelta(seconds=5)
 
 
 def test_event_stream():
@@ -222,6 +237,11 @@ def test_state():
     assert 'schedule' in response.json()
     assert 'program' in response.json()
     assert 'update_needed' in response.json()
+    state = response.json()
+    assert state['controller']['state'] == "not_loaded"
+    assert state['hardware']['is_locked'] is False
+    assert state['config']['device_id'] == DEVICE_ID
+    assert state['update_needed'] is None
 
 
 def test_logs():

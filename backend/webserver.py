@@ -64,7 +64,8 @@ class Webserver:
             client_port
         )
         response = router.handle_request(request)
-        self._current_client.send(response.content)
+        for block in response.iter_content(1024):
+            self._current_client.send(block)
         if not response.keep_alive:
             self._current_client.close()
         print(

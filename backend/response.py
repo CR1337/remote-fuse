@@ -54,13 +54,13 @@ class Response:
         )
 
     @property
-    def content(self) -> str:
-        return (
-            self.status_line + "\n"
-            + "\n".join(
-                f"{key}: {value}"
-                for key, value in self._headers.items()
-            )
-            + "\n\n"
-            + self._body
+    def header_string(self) -> str:
+        return "\n".join(
+            f"{key}: {value}"
+            for key, value in self._headers.items()
         )
+
+    def iter_content(self, block_size: int):
+        yield self.status_line + "\n" + self.header_string + "\n\n"
+        for i in range(0, len(self._body), block_size):
+            yield self._body[i:i + block_size]

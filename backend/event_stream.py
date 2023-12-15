@@ -46,13 +46,15 @@ class EventStream:
         try:
             self._socket.send(self._event_content())
             self._counter += 1
-        except OSError:
+        except OSError as ex:
+            print(str(ex))
             self.close()
         else:
             if not self._closed:
                 self._set_timer()
 
     def _event_content(self) -> str:
+        print(f"Content sent: {self._counter}")
         data = controller.get_state()
         content = f"retry: {config.event_stream_retry_period}\n"
         content += f"data: {json.dumps(data)}\n"

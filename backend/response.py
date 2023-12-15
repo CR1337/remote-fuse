@@ -2,6 +2,7 @@ class Response:
 
     STATUS_CODES: dict[int, str] = {
         200: "OK",
+        204: "No Content",
         301: "Moved Permanently",
         400: "Bad Request",
         404: "Not Found",
@@ -15,28 +16,66 @@ class Response:
     CONTENT_TYPE_PLAIN: str = "text/plain"
     CONTENT_TYPE_EVENT_STREAM: str = "text/event-stream"
 
+    _content_type: str
     _status_code: int
     _headers: dict[str, str]
     _keep_alive: bool
+
+    @classmethod
+    def preflight_response(cls):
+        return cls(
+            status_code=204,
+            body="",
+            content_type=None,
+            keep_alive=True,
+            is_preflight=True
+        )
 
     def __init__(
         self,
         status_code: int = 200,
         body: str = "{}",
         content_type: str = CONTENT_TYPE_JSON,
-        keep_alive: bool = False
+        keep_alive: bool = False,
+        is_preflight=False
     ):
+        self._content_type = content_type
         self._status_code = status_code
-        self._body = body
-        self._headers = {
-            "Access-Control-Allow-Origin": "*",
-            "Content-Type": content_type,
-            "Content-Length": str(len(body))
-        }
+        self._body = (
+            body if content_type != self.CONTENT_TYPE_EVENT_STREAM else ""
+        )
+        if is_preflight:
+            self._headers = {
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, GET, DELETE",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "86400"
+            }
+        elif content_type == self.CONTENT_TYPE_EVENT_STREAM:
+            self._headers = {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, GET, DELETE",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Content-Type": content_type,
+                "Cache-Control": "no-cache"
+            }
+        else:
+            self._headers = {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, GET, DELETE",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Content-Type": content_type,
+                "Content-Length": str(len(body))
+            }
         self._keep_alive = keep_alive
 
     def add_header(self, key: str, value: str):
         self._headers[key] = value
+
+    @property
+    def content_type(self) -> str:
+        return self._content_type
 
     @property
     def keep_alive(self) -> bool:
@@ -62,5 +101,6 @@ class Response:
 
     def iter_content(self, block_size: int):
         yield self.status_line + "\n" + self.header_string + "\n\n"
-        for i in range(0, len(self._body), block_size):
-            yield self._body[i:i + block_size]
+        if self._content_type != self.CONTENT_TYPE_EVENT_STREAM:
+            for i in range(0, len(self._body), block_size):
+                yield self._body[i:i + block_size]

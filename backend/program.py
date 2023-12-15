@@ -4,7 +4,6 @@ from backend.config import config
 from backend.address import Address
 import backend.time_util as tu
 from machine import Timer
-from backend.hardware import hardware
 from backend.logger import logger
 
 
@@ -47,7 +46,7 @@ class Program:
                 continue
             command = Command(
                 address,
-                event['timestamp'] * 1000,
+                int(float(event['timestamp']) * 1000),
                 event['name']
             )
             program.add_command(command)
@@ -122,8 +121,16 @@ class Program:
                 for cmd in self._command_list
             ],
             'time_paused': self._total_milliseconds_paused / 1000,
-            'start_timestamp': self._start_timestamp / 1000,
-            'current_timestamp': self._current_timestamp() / 1000,
+            'start_timestamp': (
+                (self._start_timestamp / 1000)
+                if self._start_timestamp
+                else None
+            ),
+            'current_timestamp': (
+                (self._current_timestamp() / 1000)
+                if self._current_timestamp()
+                else None
+            ),
             'is_running': self._running
         }
 

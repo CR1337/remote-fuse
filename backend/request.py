@@ -15,6 +15,7 @@ class Request:
     _payload: str
     _location: str
     _get_parameters: dict[str, str]
+    _valid: bool
 
     url_parameters: dict[str, str]
 
@@ -27,6 +28,7 @@ class Request:
         self._client_address = client_address
         self._client_port = client_port
         self.url_parameters = {}
+        self._valid = True
         self._parse_content()
 
     def _parse_content(self):
@@ -34,7 +36,10 @@ class Request:
             line.strip() for line in
             self._content.split("\n")
         ]
-        self._method, self._url, *_ = lines[0].split(" ")
+        try:
+            self._method, self._url, *_ = lines[0].split(" ")
+        except ValueError:
+            self._valid = False
         self._headers = {}
         for line in lines[1:]:
             if line == "":
@@ -53,6 +58,10 @@ class Request:
         else:
             self._location = self._url
             self._get_parameters = {}
+
+    @property
+    def valid(self) -> bool:
+        return self._valid
 
     @property
     def socket(self) -> socket.socket:

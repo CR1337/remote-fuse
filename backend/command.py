@@ -43,7 +43,7 @@ class Command:
     def get_state(self) -> dict:
         return {
             'address': str(self._address),
-            'timestamp': self._timestamp / 1000,
+            'timestamp': self._timestamp // 1000,
             'name': self._name,
             'fired': self._fired,
             'fireing': self._fireing,

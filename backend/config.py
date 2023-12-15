@@ -70,14 +70,20 @@ class Config:
 
     def get_state(self) -> dict:
         return {
-            "device_id": self.device_id,
-            "fuse_amount": self.fuse_amount,
-            "time_resolution": self.time_resolution / 1000,
-            "ignition_duration": self.ignition_duration,
-            "event_stream_period": self.event_stream_period,
-            "event_stream_retry_period": self.event_stream_retry_period,
-            "master_ip": self.master_ip,
-            "master_port": self.master_port
+            "config": {
+                "device_id": self.device_id,
+                "chip_amount": 1,
+                "fuse_amounts": [self.fuse_amount],
+                "debug": False,
+                "master_ip": self.master_ip,
+                "master_port": self.master_port
+            },
+            "constants": {
+                "time_resolution": self.time_resolution / 1000,
+                "ignition_duration": self.ignition_duration,
+                "event_stream_period": self.event_stream_period,
+                "event_stream_retry_period": self.event_stream_retry_period
+            }
         }
 
 

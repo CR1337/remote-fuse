@@ -1,4 +1,5 @@
 import socket
+import gc
 
 from backend.request import Request
 from backend.endpoints import router
@@ -25,6 +26,7 @@ class Webserver:
         led.blink_short()
         while not self._shutdown:
             self._mainloop()  # TODO
+            gc.collect()
             # try:
             #     self._mainloop()
             # except Exception as ex:
@@ -63,6 +65,9 @@ class Webserver:
             client_address,
             client_port
         )
+        if not request.valid:
+            self._current_client.close()
+            return
         response = router.handle_request(request)
         for block in response.iter_content(1024):
             self._current_client.send(block)

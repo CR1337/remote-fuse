@@ -1,4 +1,5 @@
 import json
+from machine import Timer
 
 from backend.hardware import hardware
 from backend.config import config
@@ -171,7 +172,9 @@ class Router:
                 return Response(status_code=404)
             request.url_parameters[name] = value
 
-        if request.method not in endpoint.methods:
+        if request.method == 'OPTIONS':
+            return Response.preflight_response()
+        elif request.method not in endpoint.methods:
             return Response(status_code=405)
 
         try:
@@ -277,8 +280,19 @@ def endpoint_system_time(request: Request) -> Response:
 @router.route("/event-stream", ['GET'])
 def endpoint_event_stream(request: Request) -> Response:
     event_stream = EventStream(request.socket)
-    event_stream.run()
-    return Response(keep_alive=True)
+
+    def timer_callbck(_):
+        event_stream.run()
+    # event_stream.run()
+    Timer().init(
+        mode=Timer.ONE_SHOT,
+        period=2000,
+        callback=timer_callbck
+    )
+    return Response(
+        content_type=Response.CONTENT_TYPE_EVENT_STREAM,
+        keep_alive=True
+    )
 
 
 @router.route("/state", ['GET'])

@@ -40,6 +40,8 @@ class Request:
             self._method, self._url, *_ = lines[0].split(" ")
         except ValueError:
             self._valid = False
+            print("INVALID REQUEST: ", lines[0])
+            return
         self._headers = {}
         for line in lines[1:]:
             if line == "":

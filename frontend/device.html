@@ -5,6 +5,36 @@
     <title>{device_id}</title>
 </head>
 <body>
-    This is <b>{device_id}</b>.
+    This is <b>{device_id}</b>. <b>{fuse_amount}</b> fuses registered.<br>
+    <br>
+    <button onclick="fire(0)" id="fireButton0">Fire A0</button><br>
+    <button onclick="fire(1)" id="fireButton1">Fire A1</button><br>
+    <button onclick="fire(2)" id="fireButton2">Fire A2</button><br>
+    <button onclick="fire(3)" id="fireButton3">Fire A3</button><br>
+    <br>
+    <button onclick="testloop()">Testloop</button>
+    <script>
+        const host = window.location.origin;
+        document.getElementById("fireButton0").disabled = {fuse_amount} < 1;
+        document.getElementById("fireButton1").disabled = {fuse_amount} < 2;
+        document.getElementById("fireButton2").disabled = {fuse_amount} < 3;
+        document.getElementById("fireButton3").disabled = {fuse_amount} < 4;
+        const testloop = () => {
+            fetch("http://" + host + "/testloop", {
+                method: "POST",
+                body: ""
+            });
+        }
+
+        const fire = (index) => {
+            fetch("http://" + host + "/fire", {
+                method: "POST",
+                body: JSON.stringify({
+                    letter: "A",
+                    number: index
+                })
+            });
+        }
+    </script>
 </body>
 </html>

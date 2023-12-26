@@ -26,7 +26,7 @@ class Webserver:
         led.blink_short()
         while not self._shutdown:
             self._mainloop()  # TODO
-            gc.collect()
+
             # try:
             #     self._mainloop()
             # except Exception as ex:
@@ -73,6 +73,7 @@ class Webserver:
             self._current_client.send(block)
         if not response.keep_alive:
             self._current_client.close()
+            gc.collect()
         print(
             f"{client_address} > {request.method} "
             + f"{request.url} ({response.status_code})"

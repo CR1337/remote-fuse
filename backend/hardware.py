@@ -30,9 +30,15 @@ class Hardware:
         self._remote_device_index = self._read_dip_pins(
             self.REMOTE_DEVICE_INDEX_BIT_INDICES
         )
-        self._fuse_amount = self._read_dip_pins(
+
+        # value -> fuse_amount
+        # 0 -> 4
+        # 1 -> 3
+        # 2 -> 2
+        # 3 -> 1
+        self._fuse_amount = 4 - self._read_dip_pins(
             self.FUSE_AMOUNT_BIT_INDICES
-        ) + 1
+        )
 
     def _read_dip_pins(self, indices: list[int]) -> int:
         value = 0

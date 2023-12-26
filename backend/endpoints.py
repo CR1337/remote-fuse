@@ -192,7 +192,10 @@ router = Router()
 def endpoint_index(request: Request) -> Response:
     with open("frontend/device.html", 'r') as file:
         content = file.read()
-    content = content.format(device_id=config.device_id)
+    content = content.format(
+        device_id=config.device_id,
+        fuse_amount=config.fuse_amount
+    )
     return Response(body=content, content_type=Response.CONTENT_TYPE_HTML)
 
 

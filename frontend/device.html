@@ -5,7 +5,8 @@
     <title>{device_id}</title>
 </head>
 <body>
-    This is <b>{device_id}</b>. <b>{fuse_amount}</b> fuses registered.<br>
+    This is <b>{device_id}</b>.<br>
+    <b>{fuse_amount}</b> fuses registered.<br>
     <br>
     <button onclick="fire(0)" id="fireButton0">Fire A0</button><br>
     <button onclick="fire(1)" id="fireButton1">Fire A1</button><br>
@@ -25,7 +26,6 @@
                 body: ""
             });
         }
-
         const fire = (index) => {
             fetch("http://" + host + "/fire", {
                 method: "POST",

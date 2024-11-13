@@ -156,7 +156,8 @@ class Controller:
                 None if self._program is None
                 else self._program.get_state()
             ),
-            'update_needed': None
+            'update_needed': None,
+            'is_remote': True
         }
 
 

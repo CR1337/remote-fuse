@@ -129,16 +129,11 @@ class Controller:
         self._program_state = self.STATE_NOT_LOADED
         self._program = None
 
-    def fire(self, letter: str, number: int):
-        logger.info(f"Fire {letter}{number}", __file__)
-        if self._program_state not in (self.STATE_NOT_LOADED,):
-            raise ProgramAlreadyLoaded()
-        address = Address(config.device_id, letter, number)
-        command = Command(address, 0, f"manual_fire_command_{address}")
-        command.light()
-
     def get_system_time(self) -> str:
         return tu.get_system_time()
+    
+    def set_system_time(self, time: str):
+        tu.set_system_time(time)
 
     def get_state(self) -> dict:
         return {

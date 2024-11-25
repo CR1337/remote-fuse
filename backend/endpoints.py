@@ -201,14 +201,7 @@ def endpoint_index(request: Request) -> Response:
 
 @router.route("/favicon.ico", ['GET'])
 def endpoint_favicon(request: Request) -> Response:
-    if config.master_ip is None or config.master_port is None:
-        return Response(status_code=404)
-    response = Response(status_code=301)
-    response.add_header(
-        "Location",
-        f"http://{config.master_ip}:{config.master_port}/favicon.ico"
-    )
-    return response
+    return Response(status_code=404)
 
 
 @router.route("/static/<path>", ['GET'])
@@ -257,10 +250,7 @@ def endpoint_program_control(request: Request) -> Response:
 
 @router.route("/fire", ['POST'])
 def endpoint_fire(request: Request) -> Response:
-    letter = request.json_payload['letter']
-    number = request.json_payload['number']
-    controller.fire(letter, number)
-    return Response()
+    return Response(status_code=501)
 
 
 @router.route("/testloop", ['POST'])
@@ -274,28 +264,21 @@ def endpoint_lock(request: Request) -> Response:
     return Response(status_code=501)
 
 
-@router.route("/system-time", ['GET'])
+@router.route("/system-time", ['GET', 'POST'])
 def endpoint_system_time(request: Request) -> Response:
-    content = {'system-time': controller.get_system_time()}
-    return Response(body=json.dumps(content))
+    if request.method == 'POST':
+        controller.set_system_time(request.json_payload['system-time'])
+        return Response()
+    elif request.method == 'GET':
+        content = {'system-time': controller.get_system_time()}
+        return Response(body=json.dumps(content))
+    
+    return Response()
 
 
 @router.route("/event-stream", ['GET'])
 def endpoint_event_stream(request: Request) -> Response:
-    event_stream = EventStream(request.socket)
-
-    def timer_callbck(_):
-        event_stream.run()
-    # event_stream.run()
-    Timer().init(
-        mode=Timer.ONE_SHOT,
-        period=2000,
-        callback=timer_callbck
-    )
-    return Response(
-        content_type=Response.CONTENT_TYPE_EVENT_STREAM,
-        keep_alive=True
-    )
+    return Response(status_code=501)
 
 
 @router.route("/state", ['GET'])
@@ -306,50 +289,34 @@ def endpoint_state(request: Request) -> Response:
 @router.route("/logs", ['GET', 'DELETE'])
 def endpoint_logs(request: Request) -> Response:
     if request.method == 'GET':
-        return Response(body=json.dumps(logger.get_log_files()))
+        return Response(body=json.dumps([]))
     elif request.method == 'DELETE':
-        logger.delete_all_logfiles()
         return Response()
+    
+    return Response()
 
 
 @router.route("/logs/<filename>", ['GET', 'DELETE'])
 def endpoint_logs_filename(request: Request) -> Response:
-    filename = request.url_parameters['filename']
-    if logger.logfile_exists(filename):
-        if request.method == 'GET':
-            return Response(
-                body=logger.get_log_file_content(filename),
-                content_type=Response.CONTENT_TYPE_PLAIN
-            )
-        elif request.method == 'DELETE':
-            logger.delete_logfile(filename)
-            return Response()
-    else:
+    if request.method == 'GET':
         return Response(status_code=404)
-
+    else:
+        return Response()
 
 @router.route("/logs/structured/<filename>", ['GET'])
 def endpoint_logs_structured_filename(request: Request) -> Response:
-    filename = request.url_parameters['filename']
-    if logger.logfile_exists(filename):
-        structured_log = logger.get_log_structured_content(filename)
-        return Response(body=json.dumps(structured_log))
-    else:
-        return Response(status_code=404)
+    return Response(status_code=404)
 
 
 @router.route("/config", ['GET', 'POST'])
 def endpoint_config(request: Request) -> Response:
     if request.method == 'GET':
-        content = json.dumps({
-            "device_id": config.device_id,
-            "fuse_amount": config.fuse_amount,
-            "time_resolution": config.time_resolution,
-            "ignition_duration": config.ignition_duration / 1000
-        })  # TODO: put dict creation into config
+        content = json.dumps(config.to_dict())
         return Response(body=content)
     elif request.method == 'POST':
         return Response(status_code=501)
+    
+    return Response()
 
 
 @router.route("/update", ['POST'])
@@ -359,8 +326,6 @@ def endpoint_update(request: Request) -> Response:
 
 @router.route("/discover", ['GET'])
 def endpoint_discover(request: Request) -> Response:
-    config.master_ip = request.client_address
-    config.master_port = request.client_port
     content = json.dumps({
         "device_id": config.device_id,
         "is_remote": True

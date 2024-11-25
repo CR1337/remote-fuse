@@ -12,10 +12,7 @@ def entrypoint():
     Network.connect_wlan()
     tu.set_ntp_time()
     webserver.run()
-
-
-# entrypoint()
-
+    
 
 try:
     entrypoint()
@@ -26,5 +23,4 @@ except (KeyboardInterrupt, SystemExit):
         "Termination due to KeyboardInterrupt or SystemExit.", "main.py"
     )
 finally:
-    # pass
     hardware.shutdown()

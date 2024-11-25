@@ -32,7 +32,7 @@ class Command:
         hardware.fuse_on(self._address.fuse_index)
         self._fireing = True
         Timer().init(
-            mode=Timer.ONE_SHOT,
+            mode=Timer.PERIODIC,
             period=int(config.ignition_duration),
             callback=self._timer_callback,
         )

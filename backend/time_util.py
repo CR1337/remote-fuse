@@ -1,7 +1,7 @@
 import time
 import ntptime
-# from backend.logger import logger
-# from backend.hardware import harware
+from backend.logger import logger
+import machine
 
 
 MACHINE_TIME_ORIGIN: int = 946684800  # 2000-01-01T00:00:00.000
@@ -20,15 +20,15 @@ def _current_seconds() -> int:
 def set_ntp_time():
     for i in range(NTP_RETIRES + 1):
         try:
-            # logger.info("setting time from ntp server", __file__)
+            logger.info("setting time from ntp server", __file__)
             ntptime.settime()
             break
         except Exception as ex:
-            # logger.exception(
-            #     "could not set time from ntp server. "
-            #     + f"retry {i + 1}/{NTP_RETIRES}",
-            #     ex, __file__
-            # )
+            logger.exception(
+                "could not set time from ntp server. "
+                + f"retry {i + 1}/{NTP_RETIRES}",
+                ex, __file__
+            )
             pass
     else:
         # logger.error("could not set time from ntp server", __file__)
@@ -38,6 +38,14 @@ def set_ntp_time():
 def get_system_time() -> str:
     y, mo, d, h, mi, s, *_ = time.localtime(_current_seconds() - MACHINE_TIME_ORIGIN)
     return f"{y}-{mo:02d}-{d:02d}T{h:02d}:{mi:02d}:{s:02d}.{000}"
+
+
+def set_system_time(time: str):
+    date_part, time_part = time.split("T")
+    year, month, day = map(int, date_part.split("-"))
+    hour, minute, second = map(int, time_part.split(":")[:3])
+    rtc = machine.RTC()
+    rtc.datetime((year, month, day, 0, hour, minute, second, 0)) 
 
 
 def timestamp_now() -> int:

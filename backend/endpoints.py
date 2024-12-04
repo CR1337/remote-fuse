@@ -194,7 +194,8 @@ def endpoint_index(request: Request) -> Response:
         content = file.read()
     content = content.format(
         device_id=config.device_id,
-        fuse_amount=config.fuse_amount
+        fuse_amount=config.fuse_amount,
+        state=json.dumps(controller.get_state())
     )
     return Response(body=content, content_type=Response.CONTENT_TYPE_HTML)
 

@@ -152,7 +152,9 @@ class Controller:
                 else self._program.get_state()
             ),
             'update_needed': None,
-            'is_remote': True
+            'is_remote': True,
+            'local_program_built': None,
+            'local_program_available': None
         }
 
 
